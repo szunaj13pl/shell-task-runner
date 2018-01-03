@@ -21,7 +21,9 @@ function defineVariable(){
     if [ ! -z "$variableName" ];then
         eval "$variableName"=true
     fi
+    
 }
+
 
 function defineVarOnGrep(){
     
@@ -31,20 +33,20 @@ function defineVarOnGrep(){
     
 }
 
+
 function setResultBadge(){
     
     local exitCode=$1
     
-    if [ "$exitCode" == "SKIP" ]
-    then
+    if [ "$exitCode" == "SKIP" ]; then
         RESULT="${CLEAR_FORMAT}[${INFO_FORMAT}SKIP${CLEAR_FORMAT}]"
         exitCode=0
-    elif [ "$exitCode" -ge 1 ]
-    then
+        elif [ "$exitCode" -ge 1 ]; then
         RESULT="${CLEAR_FORMAT}[${ERR_FORMAT}FAIL${CLEAR_FORMAT}]"
         echo -e ${ERR_FORMAT} "\n\t Error code $exitCode"
+        
         # Define custom variable if Grep is not set
-        if [ -z "$stringToGrep" ];then
+        if [ -z "$stringToGrep" ]; then
             defineVariable "$variableName"
         fi
         
@@ -56,7 +58,9 @@ function setResultBadge(){
     tput sc
     tput cuf 80;tput cuu 2; echo -e "$RESULT"
     tput rc
+    
 }
+
 
 function defineCommand(){
     
@@ -94,6 +98,7 @@ function defineCommand(){
     
 }
 
+
 function executeCommand(){
     
     local COMMAND="$1"
@@ -112,7 +117,7 @@ function executeCommand(){
     fi
     
     # Call grep function
-    if [ ! -z "$stringToGrep" ];then
+    if [ ! -z "$stringToGrep" ]; then
         defineVarOnGrep "$stringToGrep"
     fi
     
@@ -128,13 +133,21 @@ function preExecute(){
         
         "npm install")
             
-            if [ -f package.json ]
-            then
+            if [ -f package.json ]; then
                 executeCommand "$COMMAND" $VERBOSE
             else
                 echo -e "\n\t ${ERR_FORMAT}package.json${INFO_FORMAT} not found"
                 exitCode=SKIP
             fi
+        ;;
+        *bin/console*)
+            if ! [ -f bin/console ]; then
+                echo -e ${INFO_FORMAT}"Change bin/console to app/console"${CLEAR_FORMAT}
+                COMMAND=$(echo "$COMMAND" | sed -u 's/bin\/console/app\/console/')
+                echo "$COMMAND"
+            fi
+
+            executeCommand "$COMMAND" $VERBOSE
         ;;
         *)
             executeCommand "$COMMAND" $VERBOSE
@@ -152,10 +165,10 @@ if [ "$SUDO_CHOWN" ];then
     defineCommand 				verbose		false	"sudo chown $USER * --recursive" 								"Fix premissions - sudo needed to set $USER as owner"
 fi
 
-defineCommand 					quiet		true	"composer install --no-interaction --profile" 					"Install PHP dependensis"	"COMPOSER_UPDATE" "Run update"		"Composer update is recomended"
-if [ "$COMPOSER_UPDATE" ];then
-    defineCommand 				verbose		true	"composer update --profile"										"Install PHP dependensis - Update"
-fi
+# defineCommand 					quiet		true	"composer install --no-interaction --profile" 					"Install PHP dependensis"	"COMPOSER_UPDATE" "Run update"		"Composer update is recomended"
+# if [ "$COMPOSER_UPDATE" ];then
+#     defineCommand 				verbose		true	"composer update --profile"										"Install PHP dependensis - Update"
+# fi
 
 defineCommand 					quiet		false	"npm install" 													"Install JS dependensis"
 defineCommand 					quiet		false	"php bin/console cache:clear --no-warmup" 						"Clear cache"
