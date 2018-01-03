@@ -1,0 +1,168 @@
+#!/bin/bash
+# Autor Janusz Ładecki <janusz.ladecki@gmail.com>
+clear
+
+# Define dispaly formats
+AUTHOR_FORMAT=$( tput setab 0; tput setaf 2; )
+DESCRIPTION_FORMAT=$( tput setab 7; tput bold; tput setaf 0; )
+COMMAND_FORMAT=$( tput dim; tput setaf 6; )
+COMMAND2_FORMAT=$( tput sgr0; tput setab 0; tput setaf 2; tput bold; )
+OUTPUT_FORMAT=$( tput sgr0; tput setaf 4; )
+ERR_FORMAT=$( tput sgr0; tput setaf 1; tput bold; )
+INFO_FORMAT=$( tput sgr0; tput setaf 3; tput bold; )
+SCCESS_FORMAT=$( tput sgr0; tput setaf 2; tput bold; )
+CLEAR_FORMAT=$( tput sgr0; )
+
+
+echo -e ${AUTHOR_FORMAT} "by Janusz Ładecki"; tput cud 3
+
+function defineVariable(){
+    # Define custom variable
+    if [ ! -z "$variableName" ];then
+        eval "$variableName"=true
+    fi
+}
+
+function defineVarOnGrep(){
+    
+    grep --count "$stringToGrep" "$tmpfile" "$outputFile" >> /dev/null \
+    && echo -e ${INFO_FORMAT}"\n\t $messageOnGrep ${CLEAR_FORMAT}\n"\
+    && defineVariable "$variableName"
+    
+}
+
+function setResultBadge(){
+    
+    local exitCode=$1
+    
+    if [ "$exitCode" == "SKIP" ]
+    then
+        RESULT="${CLEAR_FORMAT}[${INFO_FORMAT}SKIP${CLEAR_FORMAT}]"
+        exitCode=0
+    elif [ "$exitCode" -ge 1 ]
+    then
+        RESULT="${CLEAR_FORMAT}[${ERR_FORMAT}FAIL${CLEAR_FORMAT}]"
+        echo -e ${ERR_FORMAT} "\n\t Error code $exitCode"
+        # Define custom variable if Grep is not set
+        if [ -z "$stringToGrep" ];then
+            defineVariable "$variableName"
+        fi
+        
+    else
+        RESULT="${CLEAR_FORMAT}[${SCCESS_FORMAT}DONE${CLEAR_FORMAT}]"
+    fi
+    
+    # Moves cursor
+    tput sc
+    tput cuf 80;tput cuu 2; echo -e "$RESULT"
+    tput rc
+}
+
+function defineCommand(){
+    
+    local verbose=$1
+    local dieOnError=$2
+    local command="$3"
+    local description="$4"
+    local variableName="$5"
+    local stringToGrep="$6"
+    local messageOnGrep="$7"
+    local scriptName $(basename $0)
+    local tmpfile=$(mktemp /tmp/$scriptName.XXXXXX)
+    local outputFile=$(mktemp /tmp/$scriptName.XXXXXX)
+    
+    if [ $verbose == true ] || [ "$verbose" == "v" ] || [ "$verbose" == "verbose" ]; then
+        local VERBOSE=true
+    else
+        local VERBOSE=false
+    fi
+    
+    echo -e ${DESCRIPTION_FORMAT} "$description" ${CLEAR_FORMAT}
+    echo -e ${COMMAND_FORMAT} "$command \n" ${CLEAR_FORMAT}
+    
+    preExecute "$command" $VERBOSE
+    setResultBadge $exitCode
+    
+    echo -e ${CLEAR_FORMAT}"\n"
+    
+    rm "$tmpfile" "$outputFile"
+    
+    # Stop script on error (define)
+    if [ "$dieOnError" == "true" ] && [ $exitCode -ge 1 ]; then
+        exit $exitCode
+    fi
+    
+}
+
+function executeCommand(){
+    
+    local COMMAND="$1"
+    local VERBOSE=$2
+    
+    if $VERBOSE
+    then
+        script --quiet --return --command "$COMMAND" "$tmpfile"; exitCode=$?
+    else
+        echo -e ${OUTPUT_FORMAT}; script --quiet --return --command "$COMMAND 1> $outputFile" "$tmpfile"; exitCode=$?
+        
+        # Dispaly Output 1 if err and Output 2 is empty
+        if [ -s "$tmpfile" ] && [ $exitCode -ge 1 ];then
+            cat "$outputFile"
+        fi
+    fi
+    
+    # Call grep function
+    if [ ! -z "$stringToGrep" ];then
+        defineVarOnGrep "$stringToGrep"
+    fi
+    
+}
+
+
+function preExecute(){
+    
+    local COMMAND="$1"
+    local VERBOSE=$2
+    
+    case "$COMMAND" in
+        
+        "npm install")
+            
+            if [ -f package.json ]
+            then
+                executeCommand "$COMMAND" $VERBOSE
+            else
+                echo -e "\n\t ${ERR_FORMAT}package.json${INFO_FORMAT} not found"
+                exitCode=SKIP
+            fi
+        ;;
+        *)
+            executeCommand "$COMMAND" $VERBOSE
+        ;;
+    esac
+    
+}
+
+
+# defineCommand		verbose|quiet[def=quiet]	exit on error(bool)[def=false]	"command"	"description"	"set variable on error to true"(VARIABLE_NAME)	"set variable on GREP FIND to true"(string)	"message on find"(String)
+
+defineCommand 					verbose		false	"git pull" 														"Update project"
+defineCommand 					verbose		false	"chown $USER * --recursive" 									"Fix premissions"			"SUDO_CHOWN"
+if [ "$SUDO_CHOWN" ];then
+    defineCommand 				verbose		false	"sudo chown $USER * --recursive" 								"Fix premissions - sudo needed to set $USER as owner"
+fi
+
+defineCommand 					quiet		true	"composer install --no-interaction --profile" 					"Install PHP dependensis"	"COMPOSER_UPDATE" "Run update"		"Composer update is recomended"
+if [ "$COMPOSER_UPDATE" ];then
+    defineCommand 				verbose		true	"composer update --profile"										"Install PHP dependensis - Update"
+fi
+
+defineCommand 					quiet		false	"npm install" 													"Install JS dependensis"
+defineCommand 					quiet		false	"php bin/console cache:clear --no-warmup" 						"Clear cache"
+
+defineCommand 					quiet		false	"php bin/console doctrine:migrations:migrate --no-interaction" 	"Make migrations"			"DOCKER_PS"		"Connection refused"	"Check if your DATABASE container is running"
+if [ "$DOCKER_PS" ];then
+    defineCommand 				verbose		false	"docker ps"														"List of all running Docker containers"
+fi
+defineCommand 					quiet		false	"php bin/console assets:install" 								"Assets"
+
