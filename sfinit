@@ -5,7 +5,7 @@ clear
 script_version=18.1.25
 github_url='https://github.com/szunaj13pl/shell-task-runner'
 
-echo -e ${AUTHOR_FORMAT} "by Janusz Ładecki"; tput cud 3
+echo -e ${AUTHOR_FORMAT} "by Janusz Ładecki"; tput cud 2
 
 
 function initial(){
