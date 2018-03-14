@@ -5,7 +5,7 @@
 
 clear
 
-version=18.3.14
+version=18.3.11
 github_url='https://github.com/szunaj13pl/shell-task-runner'
 config_folder="$HOME/.config/task-runner"
 
@@ -171,9 +171,9 @@ function checkOnlineVersion(){
     
     getServerVersion
     
-    local server_version=$(cat "${scriptServerVersion}/gitlab" | grep --max-count=1 'gitlab_version' |  cut -d "=" -f 2)
+    local server_version=$(cat "${scriptServerVersion}/${scriptName}" | grep --max-count=1 'version' |  cut -d "=" -f 2)
     
-    versionCompare $gitlab_version $server_version && echo -e "${YELLOW} Latest version is instaled ${NORMAL}" || (echo -e "${GREEN} New wersion on GitHub ${NORMAL}" && replaceLocalScript $server_version )
+    versionCompare $version $server_version && echo -e "${YELLOW} Latest version is instaled ${NORMAL}" || (echo -e "${GREEN} New wersion on GitHub ${NORMAL}" && replaceLocalScript $server_version )
     
 }
 
@@ -181,10 +181,10 @@ function checkOnlineVersion(){
 function replaceLocalScript(){
     
     local online_version="$1"
-    local script_full_path=$(which gitlab | head -n 1)
+    local script_full_path=$(which ${scriptName} | head -n 1)
     
     cp "$script_full_path" "${script_full_path}.bak" \
-    && cp "${scriptServerVersion}/gitlab" $(dirname $script_full_path) \
+    && cp "${scriptServerVersion}/${scriptName}" $(dirname $script_full_path) \
     && refreshDefaultConfigFile
     
     # Cleaning
