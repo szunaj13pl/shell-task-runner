@@ -190,8 +190,8 @@ function replaceLocalScript(){
     # Cleaning
     rm -rf "$scriptServerVersion" "${script_full_path}.bak"
     
-    # scriptName && exit 0
-    ./scriptName && exit 0
+    # $scriptName && exit 0
+    ./"${scriptName}" && exit 0
 }
 
 
