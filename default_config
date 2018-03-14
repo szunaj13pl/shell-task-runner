@@ -1,0 +1,34 @@
+last_update_date=2018-01-01
+autoupdate=true
+
+function run(){
+    
+    # defineCommand		verbose|quiet[def=quiet]	exit on error(bool)[def=false]	"command"	"description"	"set variable on error to true"(VARIABLE_NAME)	"set variable on GREP FIND to true"(string)	"message on find"(String)
+    
+    defineCommand 					verbose		false	"git pull --prune" 												"Update project"
+    defineCommand 					verbose		false	"chown $USER * --recursive" 									"Fix premissions"			"SUDO_CHOWN"
+    if [ "$SUDO_CHOWN" ];then
+        defineCommand 				verbose		false	"sudo chown $USER * --recursive" 								"Fix premissions - sudo needed to set $USER as owner"
+    fi
+    
+    defineCommand 					quiet		true	"composer install --no-interaction --profile" 					"Install PHP dependensis"	"COMPOSER_UPDATE" "Run update"		"Composer update is recomended"
+    # if [ "$COMPOSER_UPDATE" ];then
+    # defineCommand 				verbose		true	"composer update --profile"										"Install PHP dependensis - Update"
+    # fi
+    
+    defineCommand 					quiet		false	"npm install" 													"Install JS dependensis"
+    defineCommand 					quiet		false	"php bin/console cache:clear --no-warmup" 						"Clear cache"
+    
+    defineCommand 					quiet		false	"php bin/console doctrine:migrations:migrate --no-interaction" 	"Make migrations"			"DOCKER_PS"		"Connection refused"	"Check if your DATABASE container is running"
+    if [ "$DOCKER_PS" ];then
+        defineCommand 				verbose		false	"docker ps"														"List of all running Docker containers"
+    fi
+    defineCommand 					quiet		false	"php bin/console assets:install" 								"Assets"
+}
+
+# TODO:
+#
+# Commands:
+# tslint phpstan phpunit
+#
+# Check if folder have projects files
