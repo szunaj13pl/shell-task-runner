@@ -5,7 +5,7 @@
 
 clear
 
-version=18.3.15.1802
+version=18.3.15.1809
 github_url='https://github.com/szunaj13pl/shell-task-runner'
 config_folder="$HOME/.config/task-runner"
 
@@ -153,6 +153,13 @@ function checkConfig(){
         getConfig
     fi
     
+    if [ ! -s "${config_folder}/${template_name}" ]; then
+        
+        mkdir -p "$config_folder" || echo "Can not create default template at ${config_folder}/${template_name}" && echo "Default ${template_name} was created"
+        
+        getServerVersion && refreshDefaultConfig "default_template.yml" "${template_name}"
+        
+    fi
 }
 
 
@@ -215,7 +222,7 @@ function replaceLocalScript(){
 
 function preRunCheck(){
     
-    eval $(parse_yaml "${config_folder}/template.yml")
+    eval $(parse_yaml "${config_folder}/${template_name}")
     
     declare -a arrayOfCommands=($commands)
 
@@ -503,4 +510,4 @@ preRunCheck
 
 # set +x
 
-# parse_yaml template.yml
+# parse_yaml ${template_name}
