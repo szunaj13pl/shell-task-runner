@@ -110,6 +110,8 @@ function getServerVersion(){
     
 }
 
+
+# TODO: Create function for template.yml
 function refreshDefaultConfigFile(){
     
     cp "${scriptServerVersion}/default_config" "${config_folder}/default_config"\
@@ -117,6 +119,13 @@ function refreshDefaultConfigFile(){
     
     if [ ! -s "${config_folder}/config" ]; then
         cp "${config_folder}/default_config" "${config_folder}/config"
+    fi
+        
+    cp "${scriptServerVersion}/template.yml" "${config_folder}/default_template.yml"\
+    && cp "${config_folder}/config" "${config_folder}/config.bak"
+    
+    if [ ! -s "${config_folder}/template.yml" ]; then
+        cp "${config_folder}/default_template.yml" "${config_folder}/template.yml"
     fi
 }
 
@@ -195,17 +204,14 @@ function replaceLocalScript(){
 
 function preRunCheck(){
     
-    echo "Define tasks to run"
+    eval $(parse_yaml template.yml)
     
-eval $(parse_yaml sample.yml)
+    declare -a arrayOfCommands=($commands)
 
-
-declare -a arrayOfCommands=($commands)
-
-for command in "${arrayOfCommands[@]}"
-do
-   parseYmlToCommand "$command"
-done
+    for command in "${arrayOfCommands[@]}"
+    do
+    parseYmlToCommand "$command"
+    done
 
 
     # if [ -z "$GITLAB_URL" ]; then
@@ -485,3 +491,5 @@ preRunCheck
 # run
 
 # set +x
+
+# parse_yaml template.yml

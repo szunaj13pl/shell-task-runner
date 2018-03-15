@@ -1,6 +1,8 @@
 last_update_date=2018-01-01
 autoupdate=true
 
+template_name="template.yml"
+
 function run(){
     
     # defineCommand		verbose|quiet[def=quiet]	exit on error(bool)[def=false]	"command"	"description"	"set variable on error to true"(VARIABLE_NAME)	"set variable on GREP FIND to true"(string)	"message on find"(String)
@@ -25,10 +27,3 @@ function run(){
     fi
     defineCommand 					quiet		false	"php bin/console assets:install" 								"Assets"
 }
-
-# TODO:
-#
-# Commands:
-# tslint phpstan phpunit
-#
-# Check if folder have projects files

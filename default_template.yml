@@ -12,8 +12,20 @@
 #   message_grep: "if grep is successful show this message"
 #   run_if_var_is_true: "if this variable is true run command tutorial"
 
+# TODO:
+#  Default commands
+#  Symfony commands
+#  database commands
+#  Angular
+#  Ldap
+#  Relase commands
+#  tslint phpstan phpunit
+#  check if folder have projects files
 
-commands: git chown sudo_chown
+last_update_date: 2018-01-01
+autoupdate: true
+
+commands: git chown sudo_chown composer_install
 
 git:
   command: 'git pull --prune'
