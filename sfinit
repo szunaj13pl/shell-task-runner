@@ -5,7 +5,7 @@
 
 clear
 
-version=18.3.15.1750
+version=18.3.15.1802
 github_url='https://github.com/szunaj13pl/shell-task-runner'
 config_folder="$HOME/.config/task-runner"
 
@@ -121,22 +121,33 @@ function refreshDefaultConfigFile(){
         cp "${config_folder}/default_config" "${config_folder}/config"
     fi
         
-    cp "${scriptServerVersion}/default_template.yml" "${config_folder}/default_template.yml"\
-    && cp "${config_folder}/template.yml" "${config_folder}/template.yml.bak"
+}
+
+
+function refreshDefaultConfig(){
     
-    if [ ! -s "${config_folder}/template.yml" ]; then
-        cp "${config_folder}/default_template.yml" "${config_folder}/template.yml"
+    local serverName="$1"
+    local localName="$2"
+
+    cp "${scriptServerVersion}/${serverName}" "${config_folder}/default_${localName}"\
+    && cp "${config_folder}/${localName}" "${config_folder}/${localName}.bak"
+    
+    if [ ! -s "${config_folder}/${localName}" ]; then
+        cp "${config_folder}/default_${localName}" "${config_folder}/${localName}"
     fi
+    
 }
 
 
 function checkConfig(){
     
+    
+
     if [ ! -s "${config_folder}/config" ]; then
         
         mkdir -p "$config_folder" || echo "Can not create default config at ${config_folder}/config" && echo "Default config was created"
         
-        getServerVersion && refreshDefaultConfigFile && getConfig
+        getServerVersion && refreshDefaultConfigFile && getConfig && refreshDefaultConfig "default_template.yml" "template.yml"
         
     else
         getConfig
