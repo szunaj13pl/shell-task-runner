@@ -5,7 +5,7 @@
 
 clear
 
-version=18.3.15.1749
+version=18.3.15.1750
 github_url='https://github.com/szunaj13pl/shell-task-runner'
 config_folder="$HOME/.config/task-runner"
 
@@ -121,7 +121,7 @@ function refreshDefaultConfigFile(){
         cp "${config_folder}/default_config" "${config_folder}/config"
     fi
         
-    cp "${scriptServerVersion}/template.yml" "${config_folder}/default_template.yml"\
+    cp "${scriptServerVersion}/default_template.yml" "${config_folder}/default_template.yml"\
     && cp "${config_folder}/template.yml" "${config_folder}/template.yml.bak"
     
     if [ ! -s "${config_folder}/template.yml" ]; then
