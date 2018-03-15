@@ -93,9 +93,6 @@ gitRepositoryRawVersionUrl='https://github.com/szunaj13pl/shell-task-runner/raw/
     cp default_config $HOME/.config/${scriptName}/default_config
     cp --no-clobber default_config $HOME/.config/${scriptName}/config
     
-    echo  "Now you can use ${scriptName} like command"
-    
-    
     # Clean-up
     printf "${BLUE}Cleaning...${NORMAL}\n"
     

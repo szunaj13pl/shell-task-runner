@@ -1,7 +1,7 @@
 #!/bin/bash
 
 
-# Autor Janusz Ładecki <janusz.ladecki@gmail.com>
+# Autor Janusz Ładecki <szunaj13pl@gmail.com>
 
 clear
 
@@ -194,9 +194,20 @@ function replaceLocalScript(){
 
 
 function preRunCheck(){
-
-    echo "Pre check"
     
+    echo "Define tasks to run"
+    
+eval $(parse_yaml sample.yml)
+
+
+declare -a arrayOfCommands=($commands)
+
+for command in "${arrayOfCommands[@]}"
+do
+   parseYmlToCommand "$command"
+done
+
+
     # if [ -z "$GITLAB_URL" ]; then
     #     echo -e "Please set the variable ${RED}GITLAB_URL ${NORMAL}"
     #     echo -e "\n\t Run ${YELLOW} $(basename $0) -c ${NORMAL}"
@@ -217,16 +228,39 @@ function preRunCheck(){
 
 # ==============  TaskRunner  ===============
 
+function parse_yaml {
+
+   local prefix=$2
+   local s='[[:space:]]*' w='[a-zA-Z0-9_]*' fs=$(echo @|tr @ '\034')
+   sed -ne "s|^\($s\):|\1|" \
+        -e "s|^\($s\)\($w\)$s:$s[\"']\(.*\)[\"']$s\$|\1$fs\2$fs\3|p" \
+        -e "s|^\($s\)\($w\)$s:$s\(.*\)$s\$|\1$fs\2$fs\3|p"  $1 |
+   awk -F$fs '{
+      indent = length($1)/2;
+      vname[indent] = $2;
+      for (i in vname) {if (i > indent) {delete vname[i]}}
+      if (length($3) > 0) {
+         vn=""; for (i=0; i<indent; i++) {vn=(vn)(vname[i])("_")}
+         printf("%s%s%s=\"%s\"\n", "'$prefix'",vn, $2, $3);
+      }
+   }'
+
+}
+
+
 function defineVariable(){
+ 
     # Define custom variable
     if [ ! -z "$variableName" ];then
         eval "$variableName"=true
     fi
-    
 }
 
 
 function defineVarOnGrep(){
+    
+    local stringToGrep="$1"
+    local variableName="$2"
     
     grep --count "$stringToGrep" "$tmpfile" "$outputFile" >> /dev/null \
     && echo -e ${INFO_FORMAT}"\n\t $messageOnGrep ${CLEAR_FORMAT}\n"\
@@ -238,7 +272,8 @@ function defineVarOnGrep(){
 function setResultBadge(){
     
     local exitCode=$1
-    
+    local variableName="$2"
+        
     if [ "$exitCode" == "SKIP" ]; then
         RESULT="${CLEAR_FORMAT}[${INFO_FORMAT}SKIP${CLEAR_FORMAT}]"
         exitCode=0
@@ -254,7 +289,7 @@ function setResultBadge(){
     else
         RESULT="${CLEAR_FORMAT}[${SCCESS_FORMAT}DONE${CLEAR_FORMAT}]"
     fi
-    
+
     # Moves cursor
     tput sc
     tput cuf 80;tput cuu 2; echo -e "$RESULT"
@@ -272,6 +307,14 @@ function defineCommand(){
     local variableName="$5"
     local stringToGrep="$6"
     local messageOnGrep="$7"
+    local runIfVarExistAndIsTrue="$8"
+    
+    # Check if variable is define and if is true 
+    if [ "${!runIfVarExistAndIsTrue}" != "true" ] && [ "$runIfVarExistAndIsTrue" != "" ];then
+        return
+    fi
+
+
     local scriptName $(basename $0)
     local tmpfile=$(mktemp /tmp/$scriptName.XXXXXX)
     local outputFile=$(mktemp /tmp/$scriptName.XXXXXX)
@@ -285,8 +328,8 @@ function defineCommand(){
     echo -e ${DESCRIPTION_FORMAT} "$description" ${CLEAR_FORMAT}
     echo -e ${COMMAND_FORMAT} "$command \n" ${CLEAR_FORMAT}
     
-    preExecute "$command" $VERBOSE
-    setResultBadge $exitCode
+    preExecute "$command" $VERBOSE "$variableName"
+    setResultBadge $exitCode "$variableName"
     
     echo -e ${CLEAR_FORMAT}"\n"
     
@@ -300,10 +343,29 @@ function defineCommand(){
 }
 
 
+function parseYmlToCommand(){
+    
+    commandDefinition="$1"
+
+  local command="${commandDefinition}_command"
+  local verbose="${commandDefinition}_verbose"
+  local exit_on_error="${commandDefinition}_exit_on_error"
+  local description="${commandDefinition}_description"
+  local set_var="${commandDefinition}_set_var"
+  local grep="${commandDefinition}_grep"
+  local message_grep="${commandDefinition}_message_grep"
+  local run_if_var_is_true="${commandDefinition}_run_if_var_is_true"
+
+    defineCommand "${!verbose}" "${!exit_on_error}" "${!command}" "${!description}" "${!set_var}" "${!grep}" "${!message_grep}" "${!run_if_var_is_true}"
+}
+
+
 function executeCommand(){
     
     local COMMAND="$1"
     local VERBOSE=$2
+    local variableName="$3"
+    
     
     if $VERBOSE
     then
@@ -319,7 +381,7 @@ function executeCommand(){
     
     # Call grep function
     if [ ! -z "$stringToGrep" ]; then
-        defineVarOnGrep "$stringToGrep"
+        defineVarOnGrep "$stringToGrep" "$variableName"
     fi
     
 }
@@ -329,13 +391,14 @@ function preExecute(){
     
     local COMMAND="$1"
     local VERBOSE=$2
+    local variableName="$3"
     
     case "$COMMAND" in
         
         "npm install")
             
             if [ -f package.json ]; then
-                executeCommand "$COMMAND" $VERBOSE
+                executeCommand "$COMMAND" $VERBOSE "$variableName"
             else
                 echo -e "\n\t ${ERR_FORMAT}package.json${INFO_FORMAT} not found"
                 exitCode=SKIP
@@ -348,15 +411,14 @@ function preExecute(){
                 echo "$COMMAND"
             fi
             
-            executeCommand "$COMMAND" $VERBOSE
+            executeCommand "$COMMAND" $VERBOSE "$variableName"
         ;;
         *)
-            executeCommand "$COMMAND" $VERBOSE
+            executeCommand "$COMMAND" $VERBOSE "$variableName"
         ;;
     esac
     
 }
-
 
 
 usage() {
@@ -420,6 +482,6 @@ checkLastUpdateDate
 preRunCheck
 
 # Run tasks
-run
+# run
 
 # set +x

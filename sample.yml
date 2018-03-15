@@ -1,0 +1,56 @@
+
+#           run commands in order
+# commands: git chown sudo_chown
+
+# sudo_chown: <- name od command (user_define)
+#   command: "tutorial"
+#   verbose: true|false
+#   exit_on_error: true|false
+#   description: ""
+#   set_var: "define global variable=true"
+#   grep: "grep in output"
+#   message_grep: "if grep is successful show this message"
+#   run_if_var_is_true: "if this variable is true run command tutorial"
+
+
+commands: git chown sudo_chown
+
+git:
+  command: 'git pull --prune'
+  description: "Update project"
+  verbose: true
+  set_var: 
+  exit_on_error: false
+  grep: 
+  message_grep: 
+  run_if_var_is_true: 
+
+chown:
+  command: 'chown $USER * --recursive'
+  verbose: false
+  exit_on_error: false
+  description: "Fix premissions"
+  set_var: SUDO_CHOWN
+  grep: 
+  message_grep: 
+  run_if_var_is_true: 
+
+sudo_chown:
+  command: 'sudo chown $USER * --recursive'
+  verbose: true
+  exit_on_error: false
+  description: "Fix premissions - sudo needed to set $USER as owner"
+  set_var:
+  grep: 
+  message_grep: 
+  run_if_var_is_true: SUDO_CHOWN
+
+composer_install:
+  command: 'composer install --no-interaction --profile'
+  verbose: false
+  exit_on_error: false
+  description: "Install PHP dependensis"
+  set_var: COMPOSER_UPDATE
+  grep: Run update
+  message_grep: "Composer update is recomended"
+  run_if_var_is_true: 
