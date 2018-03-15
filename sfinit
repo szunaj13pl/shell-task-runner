@@ -51,7 +51,6 @@ function initial(){
     
     scriptName=$(basename $0)
     scriptServerVersion=$(mktemp -d /tmp/$scriptName.XXXXXX)
-    script=$(mktemp /tmp/$scriptName.XXXXXX)
     
     # Use colors, but only if connected to a terminal, and that terminal supports them.
     if which tput >/dev/null 2>&1; then
@@ -190,8 +189,29 @@ function replaceLocalScript(){
     # Cleaning
     rm -rf "$scriptServerVersion" "${script_full_path}.bak"
     
-    # $scriptName && exit 0
-    ./"${scriptName}" && exit 0
+    $scriptName && exit 0
+}
+
+
+function preRunCheck(){
+
+    echo "Pre check"
+    
+    # if [ -z "$GITLAB_URL" ]; then
+    #     echo -e "Please set the variable ${RED}GITLAB_URL ${NORMAL}"
+    #     echo -e "\n\t Run ${YELLOW} $(basename $0) -c ${NORMAL}"
+    #     exit 1
+    # fi
+    
+    # if [ -z "$GITLAB_PRIVATE_TOKEN" ]; then
+    #     echo -e "Please set the variable ${RED}GITLAB_PRIVATE_TOKEN ${NORMAL}"
+    #     echo "See ${BLUE}${GITLAB_URL}/profile/account ${NORMAL}"
+    #     echo -e echo -e "\n\t Run ${YELLOW} $(basename $0) -c ${NORMAL}"
+    #     exit 1
+    # fi
+    
+    # ping -c 2 "$GITLAB_URL" 2>>/dev/null 1>&2 || (echo -e "$GITLAB_URL ${RED} Unrechable ${NORMAL}" && exit 1) || exit 1
+    
 }
 
 
@@ -388,13 +408,16 @@ initial
 # Install requierd programs
 isInstalled git wget
 
+# Get config
+checkConfig
+
 # Check for new update
 checkLastUpdateDate
 
 [ "$just_update" == true ] && exit 0
 
-# Get config
-checkConfig
+# Check if all variables ar defined and server is online
+preRunCheck
 
 # Run tasks
 run
