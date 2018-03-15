@@ -122,7 +122,7 @@ function refreshDefaultConfigFile(){
     fi
         
     cp "${scriptServerVersion}/template.yml" "${config_folder}/default_template.yml"\
-    && cp "${config_folder}/config" "${config_folder}/config.bak"
+    && cp "${config_folder}/template.yml" "${config_folder}/template.yml.bak"
     
     if [ ! -s "${config_folder}/template.yml" ]; then
         cp "${config_folder}/default_template.yml" "${config_folder}/template.yml"
