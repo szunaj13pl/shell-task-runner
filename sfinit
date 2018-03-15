@@ -204,7 +204,7 @@ function replaceLocalScript(){
 
 function preRunCheck(){
     
-    eval $(parse_yaml template.yml)
+    eval $(parse_yaml "${config_folder}/template.yml")
     
     declare -a arrayOfCommands=($commands)
 
