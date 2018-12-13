@@ -100,6 +100,7 @@ install() {
     mkdir -p "${config_folder}"
     cp default_config.yml ${config_default_file}
     cp --no-clobber default_config.yml ${config_file}
+    ln --symbolic --backup=numbered "${HOME}/bin/${scriptName}" "${config_folder}/${scriptName}"
     
     # Clean-up
     printf "${BLUE}Cleaning...${NORMAL}\n"
