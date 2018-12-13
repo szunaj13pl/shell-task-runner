@@ -9,6 +9,14 @@ install() {
     gitRepository='https://github.com/szunaj13pl/shell-task-runner.git'
     gitRepositoryRawVersionUrl='https://github.com/szunaj13pl/shell-task-runner/raw/master/install.sh'
     
+    config_folder="$HOME/.config/${scriptName}"
+    
+    config_name="config.yml"
+    config_file="${config_folder}/${config_name}"
+    
+    config_default_name="default_config.yml"
+    config_default_file="${config_folder}/${config_default_name}"
+    
     clear
     
     # Use colors, but only if connected to a terminal, and that terminal
@@ -89,9 +97,9 @@ install() {
     
     # Create configuration folder and copy 'default_config' to it
     printf "${BLUE}Creating ${scriptName} configuration if not found any...${NORMAL}\n"
-    mkdir -p $HOME/.config/${scriptName}
-    cp default_config $HOME/.config/${scriptName}/default_config.yml
-    cp --no-clobber default_config.yml $HOME/.config/${scriptName}/config.yml
+    mkdir -p "${config_folder}"
+    cp default_config.yml ${config_default_file}
+    cp --no-clobber default_config.yml ${config_file}
     
     # Clean-up
     printf "${BLUE}Cleaning...${NORMAL}\n"
