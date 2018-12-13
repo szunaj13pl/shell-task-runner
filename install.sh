@@ -5,7 +5,7 @@
 
 install() {
     
-    scriptName='sfinit'
+    scriptName='task-runner'
     gitRepository='https://github.com/szunaj13pl/shell-task-runner.git'
     gitRepositoryRawVersionUrl='https://github.com/szunaj13pl/shell-task-runner/raw/master/install.sh'
     
@@ -84,7 +84,7 @@ install() {
     printf "${BLUE}Checking if ${YELLOW}$HOME/bin${BLUE} is in PATH ...${NORMAL}\n"
     
     echo "$PATH"| grep --quiet "$HOME/bin" \
-    && (echo 'export PATH="$HOME/bin:$PATH"' >> $HOME/.profile && printf "${GREEN} Adding ${YELLOW}$HOME/bin${GREEN} to PATH ...${NORMAL}\n")
+    || (echo 'export PATH="$HOME/bin:$PATH"' >> $HOME/.profile && printf "${GREEN} Adding ${YELLOW}$HOME/bin${GREEN} to PATH ...${NORMAL}\n")
     
     
     # Create configuration folder and copy 'default_config' to it
