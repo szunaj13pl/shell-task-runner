@@ -5,7 +5,7 @@
 
 clear
 
-version=18.3.15.1809
+version=18.12.13
 github_url='https://github.com/szunaj13pl/shell-task-runner'
 
 config_folder="$HOME/.config/task-runner"
@@ -96,7 +96,7 @@ function initial(){
 
 
 function isInstalled(){
-
+    
     local packagesName="$@"
     
     for package in $packagesName; do
@@ -110,13 +110,13 @@ function isInstalled(){
 
 
 function getServerVersion(){
-
+    
     git clone "$github_url" "$scriptServerVersion"
 }
 
 
 function refreshDefaultConfigFile(){
-
+    
     cp "${scriptServerVersion}/${default_config_name}" "${default_config_file}"\
     && cp "${config_file}" "${config_file}.bak"
     
@@ -130,7 +130,7 @@ function refreshDefaultConfig(){
     
     local serverName="$1"
     local localName="$2"
-
+    
     cp "${scriptServerVersion}/${serverName}" "${config_folder}/default_${localName}"\
     && cp "${config_folder}/${localName}" "${config_folder}/${localName}.bak"
     
@@ -150,7 +150,7 @@ function checkConfig(){
         && refreshDefaultConfig "${config_default_name}" "${config_name}"
         
     fi
-
+    
 }
 
 function checkLastUpdateDate(){
@@ -208,12 +208,12 @@ function preRunCheck(){
     eval $(parse_yaml "${config_file}")
     
     declare -a arrayOfCommands=($commands)
-
+    
     for command in "${arrayOfCommands[@]}"
     do
         parseYmlToCommand "$command"
     done
-
+    
     # if [ -z "$GITLAB_URL" ]; then
     #     echo -e "Please set the variable ${RED}GITLAB_URL ${NORMAL}"
     #     echo -e "\n\t Run ${YELLOW} $(basename $0) -c ${NORMAL}"
@@ -236,12 +236,13 @@ function preRunCheck(){
 
 function parse_yaml {
 
-   local prefix=$2
-   local s='[[:space:]]*' w='[a-zA-Z0-9_]*' fs=$(echo @|tr @ '\034')
-   sed -ne "s|^\($s\):|\1|" \
+    local prefix=$2
+    local s='[[:space:]]*' w='[a-zA-Z0-9_]*' fs=$(echo @|tr @ '\034')
+
+    sed -ne "s|^\($s\):|\1|" \
         -e "s|^\($s\)\($w\)$s:$s[\"']\(.*\)[\"']$s\$|\1$fs\2$fs\3|p" \
         -e "s|^\($s\)\($w\)$s:$s\(.*\)$s\$|\1$fs\2$fs\3|p"  $1 |
-   awk -F$fs '{
+    awk -F$fs '{
       indent = length($1)/2;
       vname[indent] = $2;
       for (i in vname) {if (i > indent) {delete vname[i]}}
@@ -249,13 +250,13 @@ function parse_yaml {
          vn=""; for (i=0; i<indent; i++) {vn=(vn)(vname[i])("_")}
          printf("%s%s%s=\"%s\"\n", "'$prefix'",vn, $2, $3);
       }
-   }'
+}'
 
 }
 
 
 function defineVariable(){
- 
+    
     # Define custom variable
     if [ ! -z "$variableName" ];then
         eval "$variableName"=true
@@ -278,7 +279,7 @@ function setResultBadge(){
     
     local exitCode=$1
     local variableName="$2"
-        
+    
     if [ "$exitCode" == "SKIP" ]; then
         RESULT="${CLEAR_FORMAT}[${INFO_FORMAT}SKIP${CLEAR_FORMAT}]"
         exitCode=0
@@ -294,7 +295,7 @@ function setResultBadge(){
     else
         RESULT="${CLEAR_FORMAT}[${SCCESS_FORMAT}DONE${CLEAR_FORMAT}]"
     fi
-
+    
     # Moves cursor
     tput sc
     tput cuf 80;tput cuu 2; echo -e "$RESULT"
@@ -313,11 +314,11 @@ function defineCommand(){
     local messageOnGrep="$7"
     local runIfVarExistAndIsTrue="$8"
     
-    # Check if variable is define and if is true 
+    # Check if variable is define and if is true
     if [ "${!runIfVarExistAndIsTrue}" != "true" ] && [ "$runIfVarExistAndIsTrue" != "" ];then
         return
     fi
-
+    
     local scriptName $(basename $0)
     local tmpfile=$(mktemp /tmp/$scriptName.XXXXXX)
     local outputFile=$(mktemp /tmp/$scriptName.XXXXXX)
@@ -348,16 +349,16 @@ function defineCommand(){
 function parseYmlToCommand(){
     
     commandDefinition="$1"
-
-  local command="${commandDefinition}_command"
-  local verbose="${commandDefinition}_verbose"
-  local exit_on_error="${commandDefinition}_exit_on_error"
-  local description="${commandDefinition}_description"
-  local set_var="${commandDefinition}_set_var"
-  local grep="${commandDefinition}_grep"
-  local message_grep="${commandDefinition}_message_grep"
-  local run_if_var_is_true="${commandDefinition}_run_if_var_is_true"
-
+    
+    local command="${commandDefinition}_command"
+    local verbose="${commandDefinition}_verbose"
+    local exit_on_error="${commandDefinition}_exit_on_error"
+    local description="${commandDefinition}_description"
+    local set_var="${commandDefinition}_set_var"
+    local grep="${commandDefinition}_grep"
+    local message_grep="${commandDefinition}_message_grep"
+    local run_if_var_is_true="${commandDefinition}_run_if_var_is_true"
+    
     defineCommand "${!verbose}" "${!exit_on_error}" "${!command}" "${!description}" "${!set_var}" "${!grep}" "${!message_grep}" "${!run_if_var_is_true}"
 }
 
@@ -422,7 +423,17 @@ function preExecute(){
 
 
 usage() {
-    echo "Usage: $(basename $0) [ -c 'edit configuration' ] [ -d 'enable debuging mode' ] [ -u 'self update' ] [ <string> 'to search repository' ]" \
+    echo -e "
+    Usage: $(basename $0)                                   \n\n\
+        -c    'edit configuration'                          \n\
+        -d    'enable debuging mode'                        \n\
+        -u    'self update'                                 \n\n\n\
+    Configuration:                                          \n\n\
+        Version:                    ${version}              \n\
+        Repository:                 ${github_url}           \n\
+        Configuration folder:       ${config_folder}        \n\
+        Configuration file:         ${config_name}          \n\
+        Default configuration file: ${config_default_name}     "
     1>&2; exit 1;
 }
 
@@ -440,7 +451,7 @@ while getopts ":dcuvv" o; do
         ;;
         c)
             initial
-        
+            
             if [ -e "${config_file}" ]; then
                 editor "${config_file}"
             else

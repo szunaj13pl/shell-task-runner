@@ -4,11 +4,11 @@
 # Created on 22.01.2018
 
 install() {
-
-scriptName='sfinit'
-gitRepository='https://github.com/szunaj13pl/shell-task-runner.git'
-gitRepositoryRawVersionUrl='https://github.com/szunaj13pl/shell-task-runner/raw/master/install.sh'
-
+    
+    scriptName='sfinit'
+    gitRepository='https://github.com/szunaj13pl/shell-task-runner.git'
+    gitRepositoryRawVersionUrl='https://github.com/szunaj13pl/shell-task-runner/raw/master/install.sh'
+    
     clear
     
     # Use colors, but only if connected to a terminal, and that terminal
@@ -31,8 +31,8 @@ gitRepositoryRawVersionUrl='https://github.com/szunaj13pl/shell-task-runner/raw/
         BOLD=""
         NORMAL=""
     fi
-
-    # Check if can reach github.com 
+    
+    # Check if can reach github.com
     printf "${NORMAL}Checking if can reach ${YELLOW} ${BOLD}Github.com${NORMAL}\n"
     ping -c 2 github.com >/dev/null 2>&1 || (printf "${NORMAL}Error: ${YELLOW}Github.com ${RED}is urechable${NORMAL}\n" && exit 1) || exit 1
     
@@ -90,8 +90,8 @@ gitRepositoryRawVersionUrl='https://github.com/szunaj13pl/shell-task-runner/raw/
     # Create configuration folder and copy 'default_config' to it
     printf "${BLUE}Creating ${scriptName} configuration if not found any...${NORMAL}\n"
     mkdir -p $HOME/.config/${scriptName}
-    cp default_config $HOME/.config/${scriptName}/default_config
-    cp --no-clobber default_config $HOME/.config/${scriptName}/config
+    cp default_config $HOME/.config/${scriptName}/default_config.yml
+    cp --no-clobber default_config.yml $HOME/.config/${scriptName}/config.yml
     
     # Clean-up
     printf "${BLUE}Cleaning...${NORMAL}\n"

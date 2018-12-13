@@ -1,10 +1,11 @@
-
 # TODO:
 #  database commands
 #  Ldap
 #  Relase commands
 #  tslint phpstan phpunit
 #  check if folder have projects files
+
+# ==============  README  ==============  #
 
 #           run commands in order
 # commands: git chown sudo_chown
@@ -24,64 +25,64 @@ autoupdate: true
 
 commands_default: git chown sudo_chown composer_install
 commands_symfony: git chown sudo_chown composer_install
-commands_angular: git chown sudo_chown npm_install 
+commands_angular: git chown sudo_chown npm_install
 
 git:
   command: 'git pull --prune'
-  description: "Update project"
+  description: 'Update project'
   verbose: true
   exit_on_error: false
-  set_var: 
-  grep: 
-  message_grep: 
-  run_if_var_is_true: 
+  set_var:
+  grep:
+  message_grep:
+  run_if_var_is_true:
 
 chown:
   command: 'chown $USER * --recursive'
   verbose: false
   exit_on_error: false
-  description: "Fix premissions"
+  description: 'Fix premissions'
   set_var: SUDO_CHOWN
-  grep: 
-  message_grep: 
-  run_if_var_is_true: 
+  grep:
+  message_grep:
+  run_if_var_is_true:
 
 sudo_chown:
   command: 'sudo chown $USER * --recursive'
   verbose: true
   exit_on_error: false
-  description: "Fix premissions - sudo needed to set $USER as owner"
+  description: 'Fix premissions - sudo needed to set $USER as owner'
   set_var:
-  grep: 
-  message_grep: 
+  grep:
+  message_grep:
   run_if_var_is_true: SUDO_CHOWN
 
 composer_install:
   command: 'composer install --no-interaction --profile'
   verbose: false
   exit_on_error: false
-  description: "Install PHP dependensis"
+  description: 'Install PHP dependensis'
   set_var: COMPOSER_UPDATE
   grep: Run update
-  message_grep: "Composer update is recomended"
-  run_if_var_is_true: 
+  message_grep: 'Composer update is recomended'
+  run_if_var_is_true:
 
 npm_install:
   command: 'npm install'
   verbose: false
   exit_on_error: false
-  description: "Install JS dependensis"
-  set_var: 
-  grep: 
-  message_grep: 
-  run_if_var_is_true: 
+  description: 'Install JS dependensis'
+  set_var:
+  grep:
+  message_grep:
+  run_if_var_is_true:
 
 db_bazak:
   command: 'bd bazak'
   verbose: true
   exit_on_error: true
-  description: "Get fresh database from production"
+  description: 'Get fresh database from production'
   set_var: DB_ERROR
   grep:
-  message_grep: 
-  run_if_var_is_true: 
+  message_grep:
+  run_if_var_is_true:
