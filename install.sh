@@ -6,6 +6,7 @@
 install() {
     
     scriptName='task-runner'
+    scriptAlias='rr'
     gitRepository='https://github.com/szunaj13pl/shell-task-runner.git'
     gitRepositoryRawVersionUrl='https://github.com/szunaj13pl/shell-task-runner/raw/master/install.sh'
     
@@ -101,6 +102,7 @@ install() {
     cp default_config.yml ${config_default_file}
     cp --no-clobber default_config.yml ${config_file}
     ln --symbolic --backup=numbered "${HOME}/bin/${scriptName}" "${config_folder}/${scriptName}"
+    ln --symbolic --backup=numbered "${HOME}/bin/${scriptName}" "${HOME}/bin/${scriptAlias}"
     
     # Clean-up
     printf "${BLUE}Cleaning...${NORMAL}\n"
@@ -108,4 +110,4 @@ install() {
     rm -rf "$temp_folder"
 }
 
-install && printf "${BLUE}Now you can use ${YELLOW}${scriptName} ${BLUE}like command${NORMAL}\n"
+install && printf "${BLUE}Now you can use ${YELLOW}${scriptName} ${BLUE}or alias ${YELLOW}${scriptAlias} ${BLUE}like command${NORMAL}\n"

@@ -5,6 +5,8 @@
 
 clear
 
+#   ================= Configuration ==================  #
+   
 version=18.12.13
 github_url='https://github.com/szunaj13pl/shell-task-runner'
 
@@ -15,6 +17,9 @@ config_file="${config_folder}/${config_name}"
 
 config_default_name="default_config.yml"
 config_default_file="${config_folder}/${config_default_name}"
+
+
+#   ================= Utilities ==================  #
 
 versionCompare() {
     if [[ $1 == $2 ]]
@@ -150,7 +155,6 @@ function checkConfig(){
         && refreshDefaultConfig "${config_default_name}" "${config_name}"
         
     fi
-    
 }
 
 function checkLastUpdateDate(){
@@ -171,7 +175,6 @@ function checkLastUpdateDate(){
     else
         echo -e "Autoupdate is${RED} OFF ${NORMAL}"
     fi
-    
 }
 
 
@@ -212,23 +215,7 @@ function preRunCheck(){
     for command in "${arrayOfCommands[@]}"
     do
         parseYmlToCommand "$command"
-    done
-    
-    # if [ -z "$GITLAB_URL" ]; then
-    #     echo -e "Please set the variable ${RED}GITLAB_URL ${NORMAL}"
-    #     echo -e "\n\t Run ${YELLOW} $(basename $0) -c ${NORMAL}"
-    #     exit 1
-    # fi
-    
-    # if [ -z "$GITLAB_PRIVATE_TOKEN" ]; then
-    #     echo -e "Please set the variable ${RED}GITLAB_PRIVATE_TOKEN ${NORMAL}"
-    #     echo "See ${BLUE}${GITLAB_URL}/profile/account ${NORMAL}"
-    #     echo -e echo -e "\n\t Run ${YELLOW} $(basename $0) -c ${NORMAL}"
-    #     exit 1
-    # fi
-    
-    # ping -c 2 "$GITLAB_URL" 2>>/dev/null 1>&2 || (echo -e "$GITLAB_URL ${RED} Unrechable ${NORMAL}" && exit 1) || exit 1
-    
+    done    
 }
 
 
@@ -319,7 +306,7 @@ function defineCommand(){
         return
     fi
     
-    local scriptName $(basename $0)
+    local scriptName=$(basename $0)
     local tmpfile=$(mktemp /tmp/$scriptName.XXXXXX)
     local outputFile=$(mktemp /tmp/$scriptName.XXXXXX)
     
@@ -438,7 +425,6 @@ usage() {
 }
 
 
-
 #   ================= START ==================  #
 
 while getopts ":dcuvv" o; do
@@ -492,7 +478,7 @@ checkLastUpdateDate
 
 [ "$just_update" == true ] && exit 0
 
-# Check if all variables ar defined and server is online
+# Check if all variables are defined and server is online
 preRunCheck
 
 # Run tasks

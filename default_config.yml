@@ -23,11 +23,13 @@
 last_update_date: 2018-01-01
 autoupdate: true
 
+commands: git chown sudo_chown composer_install
 commands_default: git chown sudo_chown composer_install
 commands_symfony: git chown sudo_chown composer_install
 commands_angular: git chown sudo_chown npm_install
 
 git:
+  run_if_var_is_true:
   command: 'git pull --prune'
   description: 'Update project'
   verbose: true
@@ -35,7 +37,6 @@ git:
   set_var:
   grep:
   message_grep:
-  run_if_var_is_true:
 
 chown:
   command: 'chown $USER * --recursive'
