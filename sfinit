@@ -8,7 +8,8 @@ clear
 version=18.3.15.1809
 github_url='https://github.com/szunaj13pl/shell-task-runner'
 config_folder="$HOME/.config/task-runner"
-
+config_file="${config_folder}/config.yml"
+config_default_file="${config_folder}/default_config.yml"
 
 versionCompare() {
     if [[ $1 == $2 ]]
@@ -97,7 +98,7 @@ function isInstalled(){
         INSTALLED=$(dpkg-query -s "$package" 2>&1 | grep --no-messages Status )
         if [ "$INSTALLED" != "Status: install ok installed" ]; then
             echo -e "${NORMAL} $package ${RED}not installed ${NORMAL}"
-            sudo apt-get install -y "$package"
+            sudo apt-get install -y "$package" || echo -e "${RED} INSTALL ${package} ${NORMAL}"
         fi
     done
     
@@ -114,11 +115,11 @@ function getServerVersion(){
 # TODO: Create function for template.yml
 function refreshDefaultConfigFile(){
     
-    cp "${scriptServerVersion}/default_config" "${config_folder}/default_config"\
-    && cp "${config_folder}/config" "${config_folder}/config.bak"
+    cp "${scriptServerVersion}/default_config.yml" "${config_folder}/default_config.yml"\
+    && cp "${config_file}" "${config_file}.bak"
     
-    if [ ! -s "${config_folder}/config" ]; then
-        cp "${config_folder}/default_config" "${config_folder}/config"
+    if [ ! -s "${config_file}" ]; then
+        cp "${config_default_file}" "${config_file}"
     fi
         
 }
@@ -142,30 +143,30 @@ function refreshDefaultConfig(){
 function checkConfig(){
     
     
-
-    if [ ! -s "${config_folder}/config" ]; then
+    if [ ! -s "${config_file}" ]; then
         
-        mkdir -p "$config_folder" || echo "Can not create default config at ${config_folder}/config" && echo "Default config was created"
+        mkdir -p "$config_folder" || echo "Can not create default config at ${config_file}" && echo "Default config was created"
         
-        getServerVersion && refreshDefaultConfigFile && getConfig && refreshDefaultConfig "default_template.yml" "template.yml"
+        # && getConfig \
+        getServerVersion && refreshDefaultConfigFile \
+        && refreshDefaultConfig "default_config.yml" "config.yml"
         
-    else
-        getConfig
+    # else
+    #     getConfig
     fi
     
-    if [ ! -s "${config_folder}/${template_name}" ]; then
+    # if [ ! -s "${config_folder}/${template_name}" ]; then
         
-        mkdir -p "$config_folder" || echo "Can not create default template at ${config_folder}/${template_name}" && echo "Default ${template_name} was created"
+    #     mkdir -p "$config_folder" || echo "Can not create default template at ${config_folder}/${template_name}" && echo "Default ${template_name} was created"
         
-        getServerVersion && refreshDefaultConfig "default_template.yml" "${template_name}"
+    #     getServerVersion && refreshDefaultConfig "default_template.yml" "${template_name}"
         
-    fi
+    # fi
 }
 
 
 function getConfig(){
-    source "${config_folder}/config"
-    
+    source "${config_file}"
 }
 
 
@@ -174,22 +175,22 @@ function checkLastUpdateDate(){
     if [ "$autoupdate" == true ] || [ ! -z ${just_update+x} ]; then
         
         # Get last update date from config
-        local last_update_date=$(cat "${config_folder}/config" | grep --perl-regexp  'last_update_date\=([0-9]{4}\-[0-9]{1,2}\-[0-9]{1,2})' | cut -d "=" -f 2)
+        local last_update_date=$(cat "${config_file}" | grep --perl-regexp  'last_update_date\=([0-9]{4}\-[0-9]{1,2}\-[0-9]{1,2})' | cut -d "=" -f 2)
         local current_date="$(date +%F)"
         
         if [[ ! "$current_date" == "$last_update_date" ]] || [ "$just_update" == true ]
         then
             echo "Check for update" && checkOnlineVersion
-            sed -E -i "s/last_update_date\=([0-9]{4}\-[0-9]{1,2}\-[0-9]{1,2})/last_update_date\=$current_date/" "${config_folder}/config"\
-            || echo "Missing 'last_update_date' parameter in ${config_folder}/config"
+            sed -E -i "s/last_update_date\=([0-9]{4}\-[0-9]{1,2}\-[0-9]{1,2})/last_update_date\=$current_date/" "${config_file}" \
+            || echo "Missing 'last_update_date' parameter in ${config_file}"
         fi
         
     else
-        
         echo -e "Autoupdate is${RED} OFF ${NORMAL}"
     fi
     
 }
+
 
 function checkOnlineVersion(){
     
@@ -221,16 +222,14 @@ function replaceLocalScript(){
 
 
 function preRunCheck(){
-    
-    eval $(parse_yaml "${config_folder}/${template_name}")
+    eval $(parse_yaml "${config_file}")
     
     declare -a arrayOfCommands=($commands)
 
     for command in "${arrayOfCommands[@]}"
     do
-    parseYmlToCommand "$command"
+        parseYmlToCommand "$command"
     done
-
 
     # if [ -z "$GITLAB_URL" ]; then
     #     echo -e "Please set the variable ${RED}GITLAB_URL ${NORMAL}"
@@ -338,7 +337,6 @@ function defineCommand(){
         return
     fi
 
-
     local scriptName $(basename $0)
     local tmpfile=$(mktemp /tmp/$scriptName.XXXXXX)
     local outputFile=$(mktemp /tmp/$scriptName.XXXXXX)
@@ -365,7 +363,6 @@ function defineCommand(){
     fi
     
 }
-
 
 function parseYmlToCommand(){
     
@@ -460,11 +457,13 @@ while getopts ":dcuvv" o; do
             set -o functrace
         ;;
         c)
-            if [ -e "${config_folder}/config" ]; then
-                editor "${config_folder}/config"
+            initial
+        
+            if [ -e "${config_file}" ]; then
+                editor "${config_file}"
             else
                 checkConfig
-                editor "${config_folder}/config"
+                editor "${config_file}"
             fi
             
             exit 0
@@ -490,7 +489,6 @@ PROJECT_SEARCH_PARAM="$1"
 
 # Defines variables and create temp files
 initial
-
 # Install requierd programs
 isInstalled git wget
 

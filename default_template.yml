@@ -1,4 +1,11 @@
 
+# TODO:
+#  database commands
+#  Ldap
+#  Relase commands
+#  tslint phpstan phpunit
+#  check if folder have projects files
+
 #           run commands in order
 # commands: git chown sudo_chown
 
@@ -12,27 +19,19 @@
 #   message_grep: "if grep is successful show this message"
 #   run_if_var_is_true: "if this variable is true run command tutorial"
 
-# TODO:
-#  Default commands
-#  Symfony commands
-#  database commands
-#  Angular
-#  Ldap
-#  Relase commands
-#  tslint phpstan phpunit
-#  check if folder have projects files
-
 last_update_date: 2018-01-01
 autoupdate: true
 
-commands: git chown sudo_chown composer_install
+commands_default: git chown sudo_chown composer_install
+commands_symfony: git chown sudo_chown composer_install
+commands_angular: git chown sudo_chown npm_install 
 
 git:
   command: 'git pull --prune'
   description: "Update project"
   verbose: true
-  set_var: 
   exit_on_error: false
+  set_var: 
   grep: 
   message_grep: 
   run_if_var_is_true: 
@@ -65,4 +64,24 @@ composer_install:
   set_var: COMPOSER_UPDATE
   grep: Run update
   message_grep: "Composer update is recomended"
+  run_if_var_is_true: 
+
+npm_install:
+  command: 'npm install'
+  verbose: false
+  exit_on_error: false
+  description: "Install JS dependensis"
+  set_var: 
+  grep: 
+  message_grep: 
+  run_if_var_is_true: 
+
+db_bazak:
+  command: 'bd bazak'
+  verbose: true
+  exit_on_error: true
+  description: "Get fresh database from production"
+  set_var: DB_ERROR
+  grep:
+  message_grep: 
   run_if_var_is_true: 
