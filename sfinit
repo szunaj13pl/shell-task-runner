@@ -7,9 +7,14 @@ clear
 
 version=18.3.15.1809
 github_url='https://github.com/szunaj13pl/shell-task-runner'
+
 config_folder="$HOME/.config/task-runner"
-config_file="${config_folder}/config.yml"
-config_default_file="${config_folder}/default_config.yml"
+
+config_name="config.yml"
+config_file="${config_folder}/${config_name}"
+
+config_default_name="default_config.yml"
+config_default_file="${config_folder}/${config_default_name}"
 
 versionCompare() {
     if [[ $1 == $2 ]]
@@ -91,7 +96,7 @@ function initial(){
 
 
 function isInstalled(){
-    
+
     local packagesName="$@"
     
     for package in $packagesName; do
@@ -101,27 +106,23 @@ function isInstalled(){
             sudo apt-get install -y "$package" || echo -e "${RED} INSTALL ${package} ${NORMAL}"
         fi
     done
-    
 }
 
 
 function getServerVersion(){
-    
+
     git clone "$github_url" "$scriptServerVersion"
-    
 }
 
 
-# TODO: Create function for template.yml
 function refreshDefaultConfigFile(){
-    
-    cp "${scriptServerVersion}/default_config.yml" "${config_folder}/default_config.yml"\
+
+    cp "${scriptServerVersion}/${default_config_name}" "${default_config_file}"\
     && cp "${config_file}" "${config_file}.bak"
     
     if [ ! -s "${config_file}" ]; then
         cp "${config_default_file}" "${config_file}"
     fi
-        
 }
 
 
@@ -136,39 +137,21 @@ function refreshDefaultConfig(){
     if [ ! -s "${config_folder}/${localName}" ]; then
         cp "${config_folder}/default_${localName}" "${config_folder}/${localName}"
     fi
-    
 }
 
 
 function checkConfig(){
     
-    
     if [ ! -s "${config_file}" ]; then
         
         mkdir -p "$config_folder" || echo "Can not create default config at ${config_file}" && echo "Default config was created"
         
-        # && getConfig \
         getServerVersion && refreshDefaultConfigFile \
-        && refreshDefaultConfig "default_config.yml" "config.yml"
+        && refreshDefaultConfig "${config_default_name}" "${config_name}"
         
-    # else
-    #     getConfig
     fi
-    
-    # if [ ! -s "${config_folder}/${template_name}" ]; then
-        
-    #     mkdir -p "$config_folder" || echo "Can not create default template at ${config_folder}/${template_name}" && echo "Default ${template_name} was created"
-        
-    #     getServerVersion && refreshDefaultConfig "default_template.yml" "${template_name}"
-        
-    # fi
+
 }
-
-
-function getConfig(){
-    source "${config_file}"
-}
-
 
 function checkLastUpdateDate(){
     
@@ -288,7 +271,6 @@ function defineVarOnGrep(){
     grep --count "$stringToGrep" "$tmpfile" "$outputFile" >> /dev/null \
     && echo -e ${INFO_FORMAT}"\n\t $messageOnGrep ${CLEAR_FORMAT}\n"\
     && defineVariable "$variableName"
-    
 }
 
 
@@ -317,7 +299,6 @@ function setResultBadge(){
     tput sc
     tput cuf 80;tput cuu 2; echo -e "$RESULT"
     tput rc
-    
 }
 
 
@@ -361,8 +342,8 @@ function defineCommand(){
     if [ "$dieOnError" == "true" ] && [ $exitCode -ge 1 ]; then
         exit $exitCode
     fi
-    
 }
+
 
 function parseYmlToCommand(){
     
@@ -404,7 +385,6 @@ function executeCommand(){
     if [ ! -z "$stringToGrep" ]; then
         defineVarOnGrep "$stringToGrep" "$variableName"
     fi
-    
 }
 
 
@@ -438,7 +418,6 @@ function preExecute(){
             executeCommand "$COMMAND" $VERBOSE "$variableName"
         ;;
     esac
-    
 }
 
 
@@ -447,6 +426,9 @@ usage() {
     1>&2; exit 1;
 }
 
+
+
+#   ================= START ==================  #
 
 while getopts ":dcuvv" o; do
     case "${o}" in
@@ -482,7 +464,6 @@ done
 shift $((OPTIND-1))
 
 PROJECT_SEARCH_PARAM="$1"
-
 
 
 # set -x
