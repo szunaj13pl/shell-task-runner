@@ -159,7 +159,7 @@ function checkConfig(){
 
 function checkLastUpdateDate(){
     
-    if [ "$autoupdate" == true ] || [ ! -z ${just_update+x} ]; then
+     if [ "$autoupdate" == true ] || [ ! -z ${just_update+x} ]; then
         
         # Get last update date from config
         local last_update_date=$(cat "${config_file}" | grep --perl-regexp  'last_update_date\=([0-9]{4}\-[0-9]{1,2}\-[0-9]{1,2})' | cut -d "=" -f 2)
@@ -167,12 +167,13 @@ function checkLastUpdateDate(){
         
         if [[ ! "$current_date" == "$last_update_date" ]] || [ "$just_update" == true ]
         then
-            echo "Check for update" && checkOnlineVersion
-            sed -E -i "s/last_update_date\=([0-9]{4}\-[0-9]{1,2}\-[0-9]{1,2})/last_update_date\=$current_date/" "${config_file}" \
+            sed -E -i "s/last_update_date\=([0-9]{4}\-[0-9]{1,2}\-[0-9]{1,2})/last_update_date\=$current_date/" "${config_file}"\
             || echo "Missing 'last_update_date' parameter in ${config_file}"
+            echo "Check for update" && checkOnlineVersion
         fi
         
     else
+        
         echo -e "Autoupdate is${RED} OFF ${NORMAL}"
     fi
 }
