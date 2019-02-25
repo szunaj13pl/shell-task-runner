@@ -20,10 +20,36 @@
 #   message_grep: "if grep is successful show this message"
 #   run_if_var_is_true: "if this variable is true run command tutorial"
 
-last_update_date: 2018-01-01
+# ==============  Configuration  ==============  #
+last_update_date: 2019-02-25
 autoupdate: true
 
-commands: git chown sudo_chown composer_install
+# ==============  Command template  ==============  #
+
+# commands:
+#   order: default symfony angular
+
+#   default:
+#     name: default
+#     description: Symfony
+#     checked: true
+#     commands: git chown sudo_chown composer_install
+
+#   symfony:
+#     name: Symfony
+#     description: PHP aplications
+#     checked: false
+#     commands: git chown sudo_chown composer_install
+
+#   angular:
+#     name: Angular
+#     description: Angular aplications
+#     checked: false
+#     commands: git chown sudo_chown npm_install
+
+# ==============  Command definition  ==============  #
+
+commands: git chown sudo_chown composer_install npm_install make_migrations
 commands_default: git chown sudo_chown composer_install
 commands_symfony: git chown sudo_chown composer_install
 commands_angular: git chown sudo_chown npm_install
@@ -84,6 +110,16 @@ db_bazak:
   exit_on_error: true
   description: 'Get fresh database from production'
   set_var: DB_ERROR
+  grep:
+  message_grep:
+  run_if_var_is_true:
+
+make_migrations:
+  command: '../console.sh doctrine:migrations:migrate --no-interaction'
+  verbose: false
+  exit_on_error: false
+  description: 'Make migrations'
+  set_var: MIGRATIONS
   grep:
   message_grep:
   run_if_var_is_true:
