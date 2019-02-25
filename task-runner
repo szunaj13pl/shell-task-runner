@@ -639,8 +639,6 @@ checkLastUpdateDate
 
 [ "$just_update" == true ] && exit 0
 
-[ "$just_update" == true ] && ; exit 0
-
 # Check if all variables are defined and server is online
 preRunCheck
 
