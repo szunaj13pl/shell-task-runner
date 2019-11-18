@@ -152,6 +152,9 @@ function checkConfig(){
         && refreshDefaultConfig "${config_default_name}" "${config_name}"
 
     fi
+
+    # Check if all variables are defined and server is online
+    loadConfig
 }
 
 function checkLastUpdateDate(){
@@ -205,15 +208,11 @@ function replaceLocalScript(){
 }
 
 
-function preRunCheck(){
+function loadConfig(){
     eval $(parse_yaml "${config_file}")
 
     declare -a arrayOfCommands=($commands)
-
-    for command in "${arrayOfCommands[@]}"
-    do
-        parseYmlToCommand "$command"
-    done
+    ARRAY_OF_COMMANDS="$arrayOfCommands"
 }
 
 
@@ -289,6 +288,12 @@ function setResultBadge(){
     tput rc
 }
 
+function runCommands(){
+    for command in "${ARRAY_OF_COMMANDS[@]}"
+    do
+        parseYmlToCommand "$command"
+    done
+}
 
 function defineCommand(){
 
@@ -646,11 +651,8 @@ checkLastUpdateDate
 
 [ "$just_update" == true ] && exit 0
 
-# Check if all variables are defined and server is online
-preRunCheck
-
 # Run tasks
-# run
+runCommands
 
 # set +x
 
