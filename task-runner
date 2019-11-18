@@ -19,6 +19,10 @@ config_default_name="default_config.yml"
 config_default_file="${config_folder}/${config_default_name}"
 
 
+#   ================= Error code ==================  #
+
+ERR_RUN_CONDITION_NOT_FULFILLED=100
+
 #   ================= Utilities ==================  #
 
 function logit(){
@@ -221,6 +225,7 @@ function replaceLocalScript(){
     # Cleaning
     rm -rf "$scriptServerVersion" "${script_full_path}.bak"
 
+    # TODO: Przetestować na czystym Ubuntu
     # echo -e "${GREEN}${BOLD}Skrypt zaktualizowany${NORMAL}"
     $scriptName && exit 0
 }
@@ -228,13 +233,9 @@ function replaceLocalScript(){
 
 function loadConfig(){
     eval $(parseYaml "${config_file}")
-
-    declare -a arrayOfCommands=($commands)
-    ARRAY_OF_COMMANDS="$arrayOfCommands"
+    declare -ax arrayOfCommands=($commands)
+    ARRAY_OF_COMMANDS=(${arrayOfCommands[@]})
 }
-
-
-# ==============  TaskRunner  ===============
 
 function parseYaml {
 
@@ -253,9 +254,9 @@ function parseYaml {
          printf("%s%s%s=\"%s\"\n", "'$prefix'",vn, $2, $3);
       }
 }'
-
 }
 
+# ==============  TaskRunner  ===============
 
 function defineVariable(){
     local name="$1"
@@ -266,7 +267,6 @@ function defineVariable(){
     fi
 }
 
-
 function defineVarOnGrep(){
 
     local stringToGrep="$1"
@@ -276,7 +276,6 @@ function defineVarOnGrep(){
     && echo -e ${INFO_FORMAT}"\n\t $messageOnGrep ${CLEAR_FORMAT}\n"\
     && defineVariable "$grepVarName"
 }
-
 
 function setResultBadge(){
 
@@ -309,37 +308,49 @@ function setResultBadge(){
 function runCommands(){
     for command in "${ARRAY_OF_COMMANDS[@]}"
     do
-        parseYmlToCommand "$command"
+        parseYmlToCommand "${command}"
     done
 }
 
 function defineCommand(){
+# declare -A commandDef=(
+#     [verbose]=${1}
+#     [dieOnError]=${2}
+#     [command]="${3}"
+#     [description]="${4}"
+#     [successVarName]="${5}"
+#     [failVarName]="${6}"
+#     [grepVarName]="${7}"
+#     [stringToGrep]="${8}"
+#     [messageOnGrep]="${9}"
+#     [runIfVarExistAndIsTrue]="${10}"
+# )
+    local verbose=${1}
+    local dieOnError=${2}
+    local command="${3}"
+    local description="${4}"
+    local successVarName="${5}"
+    local failVarName="${6}"
+    local grepVarName="${7}"
+    local stringToGrep="${8}"
+    local messageOnGrep="${9}"
+    local runIfVarExistAndIsTrue="${10}"
 
-    local verbose=$1
-    local dieOnError=$2
-    local command="$3"
-    local description="$4"
-    local successVarName="$5"
-    local failVarName="$6"
-    local grepVarName="$7"
-    local stringToGrep="$8"
-    local messageOnGrep="$9"
-    local runIfVarExistAndIsTrue="$10"
-    local successVariableName="$11"
 
     # Eval and Check if variable is define to 'true'
     if [ "${!runIfVarExistAndIsTrue}" != "true" ] && [ "$runIfVarExistAndIsTrue" != "" ];then
-        return
+        return ${ERR_RUN_CONDITION_NOT_FULFILLED:-1}
     fi
 
     local scriptName=$(basename $0)
     local tmpfile=$(mktemp /tmp/$scriptName.XXXXXX)
     local outputFile=$(mktemp /tmp/$scriptName.XXXXXX)
 
-    if [ $verbose == true ] || [ "$verbose" == "v" ] || [ "$verbose" == "verbose" ]; then
-        local verbose=true
+    # Fuzzines
+    if [ ${verbose} == true ] || (( "${verbose}" >= "1" )) || [ "${verbose}" == "v" ] || [ "${verbose}" == "verbose" ]; then
+        verbose=true
     else
-        local verbose=false
+        verbose=false
     fi
 
     echo -e ${DESCRIPTION_FORMAT} "$description" ${CLEAR_FORMAT}
@@ -358,7 +369,6 @@ function defineCommand(){
     fi
 }
 
-
 function parseYmlToCommand(){
 
     local commandDefinition="$1"
@@ -376,7 +386,7 @@ function parseYmlToCommand(){
     local run_if_var_is_true="${commandDefinition}_run_if_var_is_true"
 
     defineCommand \
-    "${!verbose}"\
+    "${VERBOSE:-${!verbose}}"\
     "${!exit_on_error}"\
     "${!command}"\
     "${!description}"\
@@ -388,13 +398,12 @@ function parseYmlToCommand(){
     "${!run_if_var_is_true}"
 }
 
-
 function executeCommand(){
 
     local command="$1"
     local verbose=$2
     local grepVarName="$3"
-    local successVariableName="$4"
+    local successVarName="$4"
 
 
     if $verbose
@@ -421,20 +430,20 @@ function executeCommand(){
     fi
 }
 
-
 function preExecute(){
 
+    local commandDef="$1"
     local command="$1"
     local verbose=$2
     local grepVarName="$3"
-    local successVariableName="$4"
+    local successVarName="$4"
 
     case "$command" in
 
         "npm install")
 
             if [ -f package.json ]; then
-                executeCommand "$command" $verbose "$grepVarName" "$successVariableName"
+                executeCommand "$command" $verbose "$grepVarName" "$successVarName"
             else
                 echo -e "\n\t ${ERR_FORMAT}package.json${INFO_FORMAT} not found"
                 exitCode=SKIP
@@ -447,10 +456,10 @@ function preExecute(){
                 echo "$command"
             fi
 
-            executeCommand "$command" $verbose "$grepVarName" "$successVariableName"
+            executeCommand "$command" $verbose "$grepVarName" "$successVarName"
         ;;
         *)
-            executeCommand "$command" $verbose "$grepVarName" "$successVariableName"
+            executeCommand "$command" $verbose "$grepVarName" "$successVarName"
         ;;
     esac
 }
