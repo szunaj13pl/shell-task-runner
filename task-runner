@@ -484,11 +484,13 @@ while getopts ":dcuvvt" o; do
                 local checked="commands_${commandDefinition}_checked"
                 local commands="commands_${commandDefinition}_commands"
 
+
                 defineCommandNew "${!name}" "${!description}" "${!checked}" "${!commands}"
             }
 
 
             function defineCommandNew(){
+
 
                 local name=$1
                 local description=$2
@@ -505,6 +507,7 @@ while getopts ":dcuvvt" o; do
                 # local scriptName=$(basename $0)
                 # local tmpfile=$(mktemp /tmp/$scriptName.XXXXXX)
                 # local outputFile=$(mktemp /tmp/$scriptName.XXXXXX)
+
 
                 # if [ $verbose == true ] || [ "$verbose" == "v" ] || [ "$verbose" == "verbose" ]; then
                 #     local VERBOSE=true
@@ -556,6 +559,7 @@ while getopts ":dcuvvt" o; do
 
             function createGui(){
 
+
                 local projects_names="$(cat $gitlabNames)"
 
             cat >> "$guiScript" <<- EndOfScript
@@ -594,10 +598,12 @@ while getopts ":dcuvvt" o; do
 
 EndOfScript
 
+
                 # Insert git clone commands
                 cat "$gitlabGit" >> "$guiScript"
                 # Apend closing for 'for, case, function'
                 echo -e "\n\t esac \n done \n} \n measureScreen \n createGui" >> "$guiScript"
+
 
             }
 
@@ -608,11 +614,7 @@ EndOfScript
                 "$guiScript"
             }
 
-
-
             eval $(parse_yaml "./default_config.yml")
-
-            echo $commands_order
 
             declare -a arrayOfCommands=($commands_order)
 
@@ -650,6 +652,9 @@ checkConfig
 checkLastUpdateDate
 
 [ "$just_update" == true ] && exit 0
+
+# Check if all variables are defined and server is online
+preRunCheck
 
 # Run tasks
 runCommands

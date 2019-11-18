@@ -58,7 +58,7 @@ git:
   verbose: true
   exit_on_error: false
   set_var:
-  set_var_on_success: 
+  set_var_on_success:
   grep:
   message_grep:
 
