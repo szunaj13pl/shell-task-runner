@@ -1,5 +1,6 @@
 #!/bin/bash
 
+set -Euo pipefail
 
 # Autor Janusz Ładecki <szunaj13pl@gmail.com>
 
@@ -7,30 +8,35 @@ clear
 
 #   ================= Configuration ==================  #
 
-version=19.11.18.0
-github_url='https://github.com/szunaj13pl/shell-task-runner'
+VERSION=19.11.19.1
+GITHUB_URL='https://github.com/szunaj13pl/shell-task-runner'
 
-config_folder="$HOME/.config/task-runner"
+CONFIG_FOLDER="$HOME/.config/task-runner"
 
-config_name="config.yml"
-config_file="${config_folder}/${config_name}"
+CONFIG_NAME="config.yml"
+CONFIG_FILE="${CONFIG_FOLDER}/${CONFIG_NAME}"
 
-config_default_name="default_config.yml"
-config_default_file="${config_folder}/${config_default_name}"
+CONFIG_DEFAULT_NAME="default_config.yml"
+CONFIG_DEFAULT_FILE="${CONFIG_FOLDER}/${CONFIG_DEFAULT_NAME}"
 
+CONFIG_REPO_NAME="rr.yml"
+
+#   ================= Error code ==================  #
+
+ERR_RUN_CONDITION_NOT_FULFILLED=100
 
 #   ================= Utilities ==================  #
 
 function logit(){
 
-    local LOG_LEVEL=$1
+    local LOG_LEVEL=${1}
     shift
     local MSG=$@
     local TIMESTAMP=$(date +"%Y-%m-%d %T")
 
     if [ $LOG_LEVEL = 'ERROR' ] || $VERBOSE
     then
-        echo "${TIMESTAMP} ${HOST} $0 [$$]: ${LOG_LEVEL} ${MSG}"
+        echo "${TIMESTAMP} ${HOST} ${0} [$$]: ${LOG_LEVEL} ${MSG}"
         echo "$BASH_SOURCE [line: $LINENO] ${FUNCNAME[0]}"
         # TODO: Add logger
     fi
@@ -71,17 +77,16 @@ versionCompare() {
     return 0
 }
 
-
 function initial(){
 
-    scriptName=$(basename $0)
-    scriptServerVersion=$(mktemp -d /tmp/$scriptName.XXXXXX)
+    SCRIPT_NAME=$(basename ${0})
+    SCRIPT_SERVER_VERSION=$(mktemp -d /tmp/${SCRIPT_NAME}.XXXXXX)
 
     # Use colors, but only if connected to a terminal, and that terminal supports them.
     if which tput >/dev/null 2>&1; then
         ncolors=$(tput colors)
     fi
-    if [ -t 1 ] && [ -n "$ncolors" ] && [ "$ncolors" -ge 8 ]; then
+    if [ -t 1 ] && [ -n "${ncolors}" ] && [ "$ncolors" -ge 8 ]; then
         RED="$(tput setaf 1)"
         GREEN="$(tput setaf 2)"
         YELLOW="$(tput setaf 3)"
@@ -111,61 +116,47 @@ function initial(){
     echo -e ${AUTHOR_FORMAT} "by Janusz Ładecki"; tput cud 3
 }
 
-
 function isInstalled(){
 
-    local packagesName="$@"
+    local packagesName="${@}"
 
-    for package in $packagesName; do
-        INSTALLED=$(dpkg-query -s "$package" 2>&1 | grep --no-messages Status )
+    for package in ${packagesName}; do
+        INSTALLED=$(dpkg-query -s "${package}" 2>&1 | grep --no-messages Status )
         if [ "$INSTALLED" != "Status: install ok installed" ]; then
-            echo -e "${NORMAL} $package ${RED}not installed ${NORMAL}"
-            sudo apt-get install -y "$package" || echo -e "${RED} INSTALL ${package} ${NORMAL}"
+            echo -e "${NORMAL} ${package} ${RED}not installed ${NORMAL}"
+            sudo apt-get install -y "${package}" || echo -e "${RED} INSTALL ${package} ${NORMAL}"
         fi
     done
 }
 
-
 function getServerVersion(){
 
-    git clone "$github_url" "$scriptServerVersion"
+    git clone "${GITHUB_URL}" "${SCRIPT_SERVER_VERSION}"
 }
-
 
 function refreshDefaultConfigFile(){
-
-    cp -b "${scriptServerVersion}/${default_config_name}" "${default_config_file}"\
-    && cp -b "${config_file}" "${config_file}.bak"
-
-    if [ ! -s "${config_file}" ]; then
-        cp -b "${config_default_file}" "${config_file}"
-    fi
+    cp "${SCRIPT_SERVER_VERSION}/${CONFIG_DEFAULT_NAME}" "${CONFIG_DEFAULT_FILE}" \
+    cp -b "${CONFIG_DEFAULT_FILE}" "${CONFIG_FILE}"
 }
-
 
 function refreshDefaultConfig(){
 
-    local serverName="$1"
-    local localName="$2"
+    cp -b "${SCRIPT_SERVER_VERSION}/${CONFIG_DEFAULT_NAME}" "${CONFIG_FOLDER}/default_${CONFIG_NAME}"\
+    && cp -b "${CONFIG_FOLDER}/${CONFIG_NAME}" "${CONFIG_FOLDER}/${CONFIG_NAME}.bak"
 
-    cp -b "${scriptServerVersion}/${serverName}" "${config_folder}/default_${localName}"\
-    && cp -b "${config_folder}/${localName}" "${config_folder}/${localName}.bak"
-
-    if [ ! -s "${config_folder}/${localName}" ]; then
-        cp -b "${config_folder}/default_${localName}" "${config_folder}/${localName}"
+    if [ ! -s "${CONFIG_FOLDER}/${CONFIG_NAME}" ]; then
+        cp -b "${CONFIG_FOLDER}/default_${CONFIG_NAME}" "${CONFIG_FOLDER}/${CONFIG_NAME}"
     fi
 }
 
-
 function checkConfig(){
 
-    if [ ! -s "${config_file}" ]; then
+    if [ ! -s "${CONFIG_FILE}" ]; then
 
-        mkdir -p "$config_folder" || echo "Can not create default config at ${config_file}" && echo "Default config was created"
+        mkdir -p "${CONFIG_FOLDER}" || echo "Can not create default config at ${CONFIG_FILE}" && echo "Default config was created"
 
         getServerVersion && refreshDefaultConfigFile \
-        && refreshDefaultConfig "${config_default_name}" "${config_name}"
-
+        && refreshDefaultConfig
     fi
 
     loadConfig
@@ -173,16 +164,16 @@ function checkConfig(){
 
 function checkLastUpdateDate(){
 
-    if [ "$autoupdate" == true ] || [ ! -z ${JUST_UPDATE+x} ]; then
+    if [ "${AUTOUPDATE}" == true ] || [ ! -z ${JUST_UPDATE+x} ]; then
 
         # Get last update date from config
-        local last_update_date=$(cat "${config_file}" | grep --perl-regexp  'last_update_date\: ([0-9]{4}\-[0-9]{1,2}\-[0-9]{1,2})' | cut -d " " -f 2)
+        local LAST_UPDATE_DATE=$(cat "${CONFIG_FILE}" | grep --perl-regexp  'LAST_UPDATE_DATE\: ([0-9]{4}\-[0-9]{1,2}\-[0-9]{1,2})' | cut -d " " -f 2)
         local current_date="$(date +%F)"
 
-        if [[ ! "$current_date" == "$last_update_date" ]] || [ "$JUST_UPDATE" == true ]
+        if [[ ! "${current_date}" == "${LAST_UPDATE_DATE}" ]] || [ "${JUST_UPDATE:-false}" == true ]
         then
-            sed -E -i "s/last_update_date\: ([0-9]{4}\-[0-9]{1,2}\-[0-9]{1,2})/last_update_date\: $current_date/" "${config_file}"\
-            || echo "Missing 'last_update_date' parameter in ${config_file}"
+            sed -E -i "s/LAST_UPDATE_DATE\: ([0-9]{4}\-[0-9]{1,2}\-[0-9]{1,2})/LAST_UPDATE_DATE\: ${current_date}/" "${CONFIG_FILE}"\
+            || echo "Missing 'LAST_UPDATE_DATE' parameter in ${CONFIG_FILE}"
             echo "Check for update" && checkOnlineVersion
         fi
 
@@ -192,53 +183,47 @@ function checkLastUpdateDate(){
     fi
 }
 
-
 function checkOnlineVersion(){
 
     ping -c 2 Github.com 2>>/dev/null 1>&2 || (echo -e "Github.com ${RED} Unrechable ${NORMAL}" && exit 1)
 
     getServerVersion
 
-    local server_version=$(cat "${scriptServerVersion}/${scriptName}" | grep --max-count=1 'version' |  cut -d "=" -f 2)
+    local server_version=$(cat "${SCRIPT_SERVER_VERSION}/${SCRIPT_NAME}" | grep --max-count=1 'VERSION' |  cut -d "=" -f 2)
 
-    versionCompare $version $server_version \
+    versionCompare ${VERSION} ${server_version} \
     && echo -e "${YELLOW} Latest version is instaled ${NORMAL}" \
     || (echo -e "${GREEN} New wersion on GitHub ${NORMAL}" \
-    && replaceLocalScript $server_version )
-
+    && replaceLocalScript ${server_version} )
 }
-
 
 function replaceLocalScript(){
 
-    local online_version="$1"
-    local script_full_path=$(which ${scriptName} | head -n 1)
+    local online_version="${1}"
+    local script_full_path=$(which ${SCRIPT_NAME} | head -n 1)
 
-    cp -b "$script_full_path" "${script_full_path}.bak" \
-    && cp -b "${scriptServerVersion}/${scriptName}" $(dirname $script_full_path) \
+    cp -b "${script_full_path}" "${script_full_path}.bak" \
+    && cp -b "${SCRIPT_SERVER_VERSION}/${SCRIPT_NAME}" $(dirname ${script_full_path}) \
     && refreshDefaultConfigFile
 
     # Cleaning
-    rm -rf "$scriptServerVersion" "${script_full_path}.bak"
+    rm -rf "$SCRIPT_SERVER_VERSION" "${script_full_path}.bak"
 
-    # echo -e "${GREEN}${BOLD}Skrypt zaktualizowany${NORMAL}"
-    $scriptName && exit 0
+    # TODO: Przetestować na czystym Ubuntu
+    echo -e "${GREEN}${BOLD}Skrypt zaktualizowany${NORMAL}" \
+    && exit 0
+    # $SCRIPT_NAME && exit 0
 }
-
 
 function loadConfig(){
-    eval $(parseYaml "${config_file}")
-
-    declare -a arrayOfCommands=($commands)
-    ARRAY_OF_COMMANDS="$arrayOfCommands"
+    eval $(parseYaml "${CONFIG_FILE}")
+    declare -ax arrayOfCommands=($COMMANDS)
+    ARRAY_OF_COMMANDS=(${arrayOfCommands[@]})
 }
 
+function parseYaml() {
 
-# ==============  TaskRunner  ===============
-
-function parseYaml {
-
-    local prefix=$2
+    local prefix=${2:-''}
     local s='[[:space:]]*' w='[a-zA-Z0-9_]*' fs=$(echo @|tr @ '\034')
 
     sed -ne "s|^\($s\):|\1|" \
@@ -253,47 +238,46 @@ function parseYaml {
          printf("%s%s%s=\"%s\"\n", "'$prefix'",vn, $2, $3);
       }
 }'
-
 }
 
+# ==============  TaskRunner  ===============
 
 function defineVariable(){
-    local name="$1"
+    local name="${1}"
     local value="${2:-true}"
+
     # Define custom variable
-    if [ ! -z "$name" ];then
-        eval "$name"=$value
+    if [ ! -z "${name}" ];then
+        eval "${name}"=${value}
     fi
 }
 
-
 function defineVarOnGrep(){
+    # TODO: Improve code
+    # local stringToGrep="${1}"
+    # local grepVarName="${2}"
 
-    local stringToGrep="$1"
-    local grepVarName="$2"
-
-    grep --count "$stringToGrep" "$tmpfile" "$outputFile" >> /dev/null \
-    && echo -e ${INFO_FORMAT}"\n\t $messageOnGrep ${CLEAR_FORMAT}\n"\
-    && defineVariable "$grepVarName"
+    grep --count "${stringToGrep}" "${tmpfile}" "${outputFile}" >> /dev/null \
+    && echo -e ${INFO_FORMAT}"\n\t ${messageOnGrep} ${CLEAR_FORMAT}\n"\
+    && defineVariable "${grepVarName}"
 }
 
-
 function setResultBadge(){
+    # TODO: Improve code
+    # local exitCode=${1}
+    # local grepVarName="${2}"
 
-    local exitCode=$1
-    local grepVarName="$2"
-
-    if [ "$exitCode" == "SKIP" ]; then
+    if [ "${exitCode}" == "SKIP" ]; then
         RESULT="${CLEAR_FORMAT}[${INFO_FORMAT}SKIP${CLEAR_FORMAT}]"
         exitCode=0
 
-    elif [ "$exitCode" -ge 1 ]; then
+    elif [ "${exitCode}" -ge 1 ]; then
         RESULT="${CLEAR_FORMAT}[${ERR_FORMAT}FAIL${CLEAR_FORMAT}]"
         echo -e ${ERR_FORMAT} "\n\t Error code $exitCode"
 
         # Define custom variable if Grep is not set
-        if [ -z "$stringToGrep" ]; then
-            defineVariable "$grepVarName"
+        if [ -z "${stringToGrep}" ]; then
+            defineVariable "${grepVarName}"
         fi
 
     else
@@ -302,66 +286,85 @@ function setResultBadge(){
 
     # Moves cursor
     tput sc
-    tput cuf 80;tput cuu 2; echo -e "$RESULT"
+    tput cuf 80;tput cuu 2; echo -e "${RESULT}"
     tput rc
 }
 
 function runCommands(){
     for command in "${ARRAY_OF_COMMANDS[@]}"
     do
-        parseYmlToCommand "$command"
+        parseYmlToCommand "${command}"
     done
 }
 
 function defineCommand(){
-
-    local verbose=$1
-    local dieOnError=$2
-    local command="$3"
-    local description="$4"
-    local successVarName="$5"
-    local failVarName="$6"
-    local grepVarName="$7"
-    local stringToGrep="$8"
-    local messageOnGrep="$9"
-    local runIfVarExistAndIsTrue="$10"
-    local successVariableName="$11"
+    # TODO: Improve code
+# declare -A commandDef=(
+#     [verbose]=${1}
+#     [dieOnError]=${2}
+#     [command]="${3}"
+#     [description]="${4}"
+#     [successVarName]="${5}"
+#     [failVarName]="${6}"
+#     [grepVarName]="${7}"
+#     [stringToGrep]="${8}"
+#     [messageOnGrep]="${9}"
+#     [runIfVarExistAndIsTrue]="${10}"
+# )
+    local verbose=${1}
+    local dieOnError=${2}
+    local command="${3}"
+    local description="${4}"
+    local successVarName="${5}"
+    local failVarName="${6}"
+    local grepVarName="${7}"
+    local stringToGrep="${8}"
+    local messageOnGrep="${9}"
+    local runIfVarExistAndIsTrue="${10}"
 
     # Eval and Check if variable is define to 'true'
-    if [ "${!runIfVarExistAndIsTrue}" != "true" ] && [ "$runIfVarExistAndIsTrue" != "" ];then
-        return
+    if [ "${!runIfVarExistAndIsTrue:-}" != "true" ] \
+    && [ "${runIfVarExistAndIsTrue:-}" != "" ]
+    then
+        return ${ERR_RUN_CONDITION_NOT_FULFILLED:-1}
     fi
 
-    local scriptName=$(basename $0)
-    local tmpfile=$(mktemp /tmp/$scriptName.XXXXXX)
-    local outputFile=$(mktemp /tmp/$scriptName.XXXXXX)
+    local tmpfile=$(mktemp /tmp/${SCRIPT_NAME}.XXXXXX)
+    local outputFile=$(mktemp /tmp/${SCRIPT_NAME}.XXXXXX)
 
-    if [ $verbose == true ] || [ "$verbose" == "v" ] || [ "$verbose" == "verbose" ]; then
-        local verbose=true
+    # Fuzzines
+    local regexpNumber='^[0-9]+$'
+    if [ ${verbose:-"false"} == "true" ] \
+    || ([[ ${verbose} =~ $regexpNumber ]] && (( ${verbose:-0} >= 1 ))) \
+    || [ "${verbose:-''}" == "v" ] \
+    || [ "${verbose:-''}" == "verbose" ]; then
+        verbose=true
     else
-        local verbose=false
+        verbose=false
     fi
 
-    echo -e ${DESCRIPTION_FORMAT} "$description" ${CLEAR_FORMAT}
-    echo -e ${COMMAND_FORMAT} "$command \n" ${CLEAR_FORMAT}
+    echo -e ${DESCRIPTION_FORMAT} "${description}" ${CLEAR_FORMAT}
+    echo -e ${COMMAND_FORMAT} "${command} \n" ${CLEAR_FORMAT}
 
-    preExecute "$command" $verbose "$grepVarName" "$successVarName"
-    setResultBadge $exitCode "$grepVarName"
+    # TODO: Improve code
+    # preExecute "$command" $verbose "$grepVarName" "$successVarName"
+    # setResultBadge $exitCode "$grepVarName"
+    preExecute
+    setResultBadge
 
     echo -e ${CLEAR_FORMAT}"\n"
 
-    rm "$tmpfile" "$outputFile"
+    rm "${tmpfile}" "${outputFile}"
 
     # Stop script on error (define)
-    if [ "$dieOnError" == "true" ] && [ $exitCode -ge 1 ]; then
-        exit $exitCode
+    if [ "${dieOnError}" == "true" ] && [ ${exitCode} -ge 1 ]; then
+        exit ${exitCode}
     fi
 }
 
-
 function parseYmlToCommand(){
 
-    local commandDefinition="$1"
+    local commandDefinition="${1}"
 
     local command="${commandDefinition}_command"
     local verbose="${commandDefinition}_verbose"
@@ -376,105 +379,104 @@ function parseYmlToCommand(){
     local run_if_var_is_true="${commandDefinition}_run_if_var_is_true"
 
     defineCommand \
-    "${!verbose}"\
-    "${!exit_on_error}"\
-    "${!command}"\
-    "${!description}"\
-    "${!set_var_success}"\
-    "${!set_var_fail}"\
-    "${!set_var_grep}"\
-    "${!grep}"\
-    "${!grep_message}"\
-    "${!run_if_var_is_true}"
+    "${VERBOSE:-${!verbose:-0}}"\
+    "${!exit_on_error:-false}"\
+    "${!command:?\"${RED}Command in config is empty.${NORMAL} Run ${BLUE}${BOLD}${SCRIPT_NAME} -c${NORMAL}\"}"\
+    "${!description:?\"${RED}Description in config is empty.${NORMAL} Run ${BLUE}${BOLD}${SCRIPT_NAME} -c${NORMAL}\"}"\
+    "${!set_var_success:-${commandDefinition^^}_SUCCESS}"\
+    "${!set_var_fail:-${commandDefinition^^}_FAIL}"\
+    "${!set_var_grep:-${commandDefinition^^}_GREP}"\
+    "${!grep:-}"\
+    "${!grep_message:-"No message for the string ${GREEN}\'${!grep:-}\'${YELLOW}${BOLD} found"}"\
+    "${!run_if_var_is_true:-}"
 }
 
-
 function executeCommand(){
+    # TODO: Improve code
+    # local command="${1}"
+    # local verbose=${2}
+    # local grepVarName="${3}"
+    # local successVarName="${4}"
 
-    local command="$1"
-    local verbose=$2
-    local grepVarName="$3"
-    local successVariableName="$4"
-
+    exitCode=0
 
     if $verbose
     then
-        script --quiet --return --command "$command" "$tmpfile"; exitCode=$?
+        script --quiet --return --command "$command" "$tmpfile" || exitCode=$?
+
     else
-        echo -e ${OUTPUT_FORMAT}; script --quiet --return --command "$command 1> $outputFile" "$tmpfile"; exitCode=$?
+        echo -e ${OUTPUT_FORMAT}; script --quiet --return --command "${command} 1> ${outputFile}" "${tmpfile}" || exitCode=$?
 
         # Dispaly Output 1 if err and Output 2 is empty
-        if [ -s "$tmpfile" ] && [ $exitCode -ge 1 ];then
-            cat "$outputFile"
+        if [ -s "${tmpfile}" ] && [ ${exitCode} -ge 1 ];then
+            cat "${outputFile}"
         fi
     fi
 
-    if [ $exitCode -eq 0 ];then
-        defineVariable "$successVarName"
-    elif [ $exitCode -ge 1 ];then
-        defineVariable "$failVarName"
+    if [ ${exitCode} -eq 0 ];then
+        defineVariable "${successVarName}"
+    elif [ ${exitCode} -ge 1 ];then
+        defineVariable "${failVarName}"
     fi
 
     # Call grep function
-    if [ ! -z "$stringToGrep" ]; then
-        defineVarOnGrep "$stringToGrep" "$grepVarName"
+    if [ ! -z "${stringToGrep}" ]; then
+        defineVarOnGrep "${stringToGrep}" "${grepVarName}"
     fi
 }
 
-
 function preExecute(){
-
-    local command="$1"
-    local verbose=$2
-    local grepVarName="$3"
-    local successVariableName="$4"
+    # TODO: Improve code
+    # local commandDef="${1}"
+    # local command="${1}"
+    # local verbose=${2}
+    # local grepVarName="${3}"
+    # local successVarName="${4}"
 
     case "$command" in
 
         "npm install")
 
-            if [ -f package.json ]; then
-                executeCommand "$command" $verbose "$grepVarName" "$successVariableName"
-            else
+            if ! [ -f package.json ]; then
                 echo -e "\n\t ${ERR_FORMAT}package.json${INFO_FORMAT} not found"
                 exitCode=SKIP
+                return;
             fi
         ;;
         *bin/console*)
             if ! [ -f bin/console ]; then
                 echo -e ${INFO_FORMAT}"Change bin/console to app/console"${CLEAR_FORMAT}
-                command=$(echo "$command" | sed -u 's/bin\/console/app\/console/')
-                echo "$command"
+                command=$(echo "${command}" | sed -u 's/bin\/console/app\/console/')
+                echo "${command}"
             fi
-
-            executeCommand "$command" $verbose "$grepVarName" "$successVariableName"
-        ;;
-        *)
-            executeCommand "$command" $verbose "$grepVarName" "$successVariableName"
         ;;
     esac
+
+    executeCommand
 }
 
 
 usage() {
     echo -e "
-    Usage: $(basename $0)                                   \n\n\
+    Usage: $(basename ${0})                                   \n\n\
         -c    'edit configuration'                          \n\
+        -s    'show configuration'                          \n\
         -d    'enable debuging mode'                        \n\
+        -v    'all commands verbose'                        \n\
         -u    'self update'                                 \n\n\n\
     Configuration:                                          \n\n\
-        Version:                    ${version}              \n\
-        Repository:                 ${github_url}           \n\
-        Configuration folder:       ${config_folder}        \n\
-        Configuration file:         ${config_name}          \n\
-        Default configuration file: ${config_default_name}     "
+        Version:                    ${VERSION}              \n\
+        Repository:                 ${GITHUB_URL}           \n\
+        Configuration folder:       ${CONFIG_FOLDER}        \n\
+        Configuration file:         ${CONFIG_NAME}          \n\
+        Default configuration file: ${CONFIG_DEFAULT_NAME}     "
     1>&2; exit 1;
 }
 
 
 #   ================= MAIN ==================  #
 
-while getopts ":dcuvvt" o; do
+while getopts ":dlcsuvvt" o; do
     case "${o}" in
         d)
             echo "Debug mode is ON"
@@ -482,14 +484,35 @@ while getopts ":dcuvvt" o; do
             set -x ;
             set -o functrace
         ;;
+        l)
+            initial
+            CONFIG_FILE="./${CONFIG_REPO_NAME}"
+            if [ -s "${CONFIG_FILE}" ]; then
+                less "${CONFIG_FILE}"
+            fi
+
+            exit 0
+        ;;
         c)
             initial
 
-            if [ -e "${config_file}" ]; then
-                editor "${config_file}"
+            if [ -e "${CONFIG_FILE}" ]; then
+                editor "${CONFIG_FILE}"
             else
                 checkConfig
-                editor "${config_file}"
+                editor "${CONFIG_FILE}"
+            fi
+
+            exit 0
+        ;;
+        s)
+            initial
+
+            if [ -e "${CONFIG_FILE}" ]; then
+                less "${CONFIG_FILE}"
+            else
+                checkConfig
+                less "${CONFIG_FILE}"
             fi
 
             exit 0
@@ -498,21 +521,21 @@ while getopts ":dcuvvt" o; do
             JUST_UPDATE=true
         ;;
         v)
-            VERBOSE=$(($VERBOSE + 1))
+            VERBOSE=$((${VERBOSE:-0} + 1))
         ;;
 #         t)
 #             echo "Test run"
 
 #             initial
 
-#             guiScript=$(mktemp /tmp/$scriptName.XXXXXX)
-#             gitlabNames=$(mktemp /tmp/$scriptName.XXXXXX)
-#             gitlabGit=$(mktemp /tmp/$scriptName.XXXXXX)
+#             guiScript=$(mktemp /tmp/$SCRIPT_NAME.XXXXXX)
+#             gitlabNames=$(mktemp /tmp/$SCRIPT_NAME.XXXXXX)
+#             gitlabGit=$(mktemp /tmp/$SCRIPT_NAME.XXXXXX)
 
 
 #             function parseYmlToCommandNew(){
 
-#                 commandDefinition="$1"
+#                 commandDefinition="${1}"
 
 #                 local command="commands_${commandDefinition}_name"
 #                 local description="commands_${commandDefinition}_description"
@@ -527,10 +550,10 @@ while getopts ":dcuvvt" o; do
 #             function defineCommandNew(){
 
 
-#                 local name=$1
-#                 local description=$2
-#                 local isChecked="$3"
-#                 local commands="$4"
+#                 local name=${1}
+#                 local description=${2}
+#                 local isChecked="${3}"
+#                 local commands="${4}"
 
 #                 [[ $isChecked == true ]] \
 #                 && local checked="ON" \
@@ -539,9 +562,8 @@ while getopts ":dcuvvt" o; do
 #                 echo -e "${name} ${description} ${checked}"
 #                 # echo -e "${name} ${description} ${checked} ${commands}"
 
-#                 # local scriptName=$(basename $0)
-#                 # local tmpfile=$(mktemp /tmp/$scriptName.XXXXXX)
-#                 # local outputFile=$(mktemp /tmp/$scriptName.XXXXXX)
+#                 # local tmpfile=$(mktemp /tmp/$SCRIPT_NAME.XXXXXX)
+#                 # local outputFile=$(mktemp /tmp/$SCRIPT_NAME.XXXXXX)
 
 
 #                 # if [ $verbose == true ] || [ "$verbose" == "v" ] || [ "$verbose" == "verbose" ]; then
@@ -574,7 +596,7 @@ while getopts ":dcuvvt" o; do
 
 #                 echo -e "${YELLOW} Loadnig script ${NORMAL}"
 
-#                 local online="$1"
+#                 local online="${1}"
 #                 i=1
 #                 echo "$online" | while read line;do
 
@@ -671,8 +693,9 @@ shift $((OPTIND-1))
 
 # Defines variables and create temp files
 initial
+
 # Install requierd programs
-isInstalled git wget
+isInstalled git wget less
 
 # Get config
 checkConfig
@@ -680,11 +703,7 @@ checkConfig
 # Check for new update
 checkLastUpdateDate
 
-[ "$JUST_UPDATE" == true ] && exit 0
+[ "${JUST_UPDATE:=false}" == true ] && exit 0
 
 # Run tasks
 runCommands
-
-# set +x
-
-# parseYaml ${template_name}

@@ -1,76 +1,73 @@
-# TODO:
-#  database commands
-#  Ldap
-#  Relase commands
-#  tslint phpstan phpunit
-#  check if folder have projects files
-
 # ==============  README  ==============  #
-
+#
 #           run commands in order
-# commands: git chown sudo_chown
-
+# COMMANDS: git chown sudo_chown
+#
 # sudo_chown: <- name od command (user_define)
 #   command: "tutorial"
 #   verbose: true|false
 #   exit_on_error: true|false
 #   description: ""
-#   set_var: "define global variable=true"
+#   set_var_grep: "define global variable=true"
+#   set_var_success: "define global variable=true"
+#   set_var_fail: "define global variable=true"
 #   grep: "grep in output"
-#   message_grep: "if grep is successful show this message"
+#   grep_message: "if grep is successful show this message"
 #   run_if_var_is_true: "if this variable is true run command tutorial"
-
+#
 # ==============  Configuration  ==============  #
-last_update_date: 2019-02-25
-autoupdate: true
 
-# ==============  Command template  ==============  #
+LAST_UPDATE_DATE: 2019-11-18
+AUTOUPDATE: true
 
-# commands:
-#   order: default symfony angular
-
-#   default:
-#     name: default
-#     description: Symfony
-#     checked: true
-#     commands: git chown sudo_chown composer_install
-
-#   symfony:
-#     name: Symfony
-#     description: PHP aplications
-#     checked: false
-#     commands: git chown sudo_chown composer_install
-
-#   angular:
-#     name: Angular
-#     description: Angular aplications
-#     checked: false
-#     commands: git chown sudo_chown npm_install
-
-# ==============  Command definition  ==============  #
-
-commands: git chown
-# commands: git chown sudo_chown composer_install npm_install make_migrations
+COMMANDS: git clear sudo_clear composer_install npm_install make_migrations
 
 git:
-  run_if_var_is_true:
   command: 'git pull --prune'
   description: 'Update project'
   verbose: true
+  run_if_var_is_true:
   exit_on_error: false
-  set_var:
-  set_var_on_success:
+  set_var_grep:
+  set_var_success:
+  set_var_fail:
   grep:
-  message_grep:
+  grep_message:
+
+clear:
+  command: 'rm --interactive=never --dir --recursive --force --verbose var/transpork vendor/ node_modules var/cache/*'
+  verbose: false
+  exit_on_error: false
+  description: 'Remove files'
+  set_var_grep:
+  set_var_success:
+  set_var_fail: SUDO_RM
+  grep:
+  grep_message:
+  run_if_var_is_true:
+
+sudo_clear:
+  command: 'sudo rm --interactive=never --dir --recursive --force --verbose var/transpork vendor/ node_modules var/cache/*'
+  verbose: false
+  exit_on_error: false
+  description: 'Remove files - sudo needed to set $USER as owner'
+  set_var_grep:
+  set_var_success:
+  set_var_fail:
+  grep:
+  grep_message:
+  run_if_var_is_true: SUDO_RM
 
 chown:
   command: 'chown $USER * --recursive'
   verbose: false
   exit_on_error: false
   description: 'Fix premissions'
-  set_var: SUDO_CHOWN
+  set_var_grep:
+  set_var_success:
+  set_var_fail: SUDO_CHOWN
   grep:
-  message_grep:
+  grep_message:
   run_if_var_is_true:
 
 sudo_chown:
@@ -78,47 +75,69 @@ sudo_chown:
   verbose: true
   exit_on_error: false
   description: 'Fix premissions - sudo needed to set $USER as owner'
-  set_var:
+  set_var_grep:
+  set_var_success:
+  set_var_fail:
   grep:
-  message_grep:
+  grep_message:
   run_if_var_is_true: SUDO_CHOWN
 
 composer_install:
-  command: 'composer install --no-interaction --profile'
+  command: 'composer install --no-interaction'
   verbose: false
-  exit_on_error: false
+  exit_on_error: true
   description: 'Install PHP dependensis'
-  set_var: COMPOSER_UPDATE
+  set_var_grep:
+  set_var_success:
+  set_var_fail:
   grep: Run update
-  message_grep: 'Composer update is recomended'
+  grep_message: 'Composer update is recomended'
   run_if_var_is_true:
 
 npm_install:
+  run_if_var_is_true:
   command: 'npm install'
-  verbose: false
-  exit_on_error: false
-  description: 'Install JS dependensis'
-  set_var:
-  grep:
-  message_grep:
-  run_if_var_is_true:
-
-db_bazak:
-  command: 'bd bazak'
+  description: 'Node modules install'
   verbose: true
-  exit_on_error: true
-  description: 'Get fresh database from production'
-  set_var: DB_ERROR
+  exit_on_error: false
+  set_var_grep:
+  set_var_success:
+  set_var_fail:
   grep:
-  message_grep:
-  run_if_var_is_true:
+  grep_message:
 
 make_migrations:
   command: '../console.sh doctrine:migrations:migrate --no-interaction'
   verbose: false
   exit_on_error: false
   description: 'Make migrations'
-  set_var: MIGRATIONS
+  set_var_grep:
+  set_var_success:
+  set_var_fail:
   grep:
-  message_grep:
+  grep_message:
+  run_if_var_is_true: COMPOSER_INSTALL_SUCCESS
+
+db_bazak:
+  command: 'db -g anonymous_bazak'
+  verbose: true
+  exit_on_error: true
+  description: 'Get fresh database from production'
+  set_var_grep:
+  set_var_success:
+  set_var_fail:
+  grep:
+  grep_message:
+  run_if_var_is_true:
+
+db_iapi:
+  command: 'db -g api'
+  verbose: true
+  exit_on_error: true
+  description: 'Get fresh database from production'
+  set_var_grep:
+  set_var_success:
+  set_var_fail:
+  grep:
+  grep_message:
   run_if_var_is_true:
