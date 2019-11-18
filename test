@@ -11,35 +11,35 @@ function measureScreen(){
 }
 
 function createGui(){
-    
-    
+
+
     local TYPE="menu"
     local HEIGHT=$((rows - 3))
     local WIDTH=$(( cols / 2))
     local CHOICE_HEIGHT=$(( rows - 5))
     local MENU="by Janusz Ładecki\n\nChoose repo to clone:"
-    
+
     local OPTIONS=($(cat --number --squeeze-blank --number-nonblank data))
-    
+
     # local CHOICES=$(dialog --menu \
     #     "MENU" \
     #     300 300 200 \
     # "${OPTIONS[@]}" 2>&1 >/dev/tty)
-    
+
     local CHOICES=$( dialog --menu \
         "MENU" \
         300 300 200 \
     "${OPTIONS[@]}" 2>&1 >/dev/tty)
-    
-    
+
+
     # $HEIGHT $WIDTH $CHOICE_HEIGHT \
     # clear
-    
+
     # echo $CHOICESa
     # for choice in \$CHOICES
     # do
     #     case \$choice in
-    
+
     # esac
     # done
     # dialog --title "Equinoxes and Solistices"  \

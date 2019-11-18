@@ -49,7 +49,8 @@ autoupdate: true
 
 # ==============  Command definition  ==============  #
 
-commands: git chown sudo_chown composer_install npm_install make_migrations
+commands: git chown
+# commands: git chown sudo_chown composer_install npm_install make_migrations
 
 git:
   run_if_var_is_true:
