@@ -50,9 +50,6 @@ autoupdate: true
 # ==============  Command definition  ==============  #
 
 commands: git chown sudo_chown composer_install npm_install make_migrations
-commands_default: git chown sudo_chown composer_install
-commands_symfony: git chown sudo_chown composer_install
-commands_angular: git chown sudo_chown npm_install
 
 git:
   run_if_var_is_true:
@@ -61,6 +58,7 @@ git:
   verbose: true
   exit_on_error: false
   set_var:
+  set_var_on_success: 
   grep:
   message_grep:
 
