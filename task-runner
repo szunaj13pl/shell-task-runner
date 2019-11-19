@@ -189,7 +189,7 @@ function checkOnlineVersion(){
 
     getServerVersion
 
-    local server_version=$(cat "${SCRIPT_SERVER_VERSION}/${SCRIPT_NAME}" | grep --max-count=1 'VERSION' |  cut -d "=" -f 2)
+    local server_version=$(cat "${SCRIPT_SERVER_VERSION}/task-runner" | grep --max-count=1 'VERSION' |  cut -d "=" -f 2)
 
     versionCompare ${VERSION} ${server_version} \
     && echo -e "${YELLOW} Latest version is instaled ${NORMAL}" \
