@@ -8,7 +8,7 @@ clear
 
 #   ================= Configuration ==================  #
 
-VERSION=19.11.19.1
+VERSION=19.11.19.2
 GITHUB_URL='https://github.com/szunaj13pl/shell-task-runner'
 
 CONFIG_FOLDER="$HOME/.config/task-runner"
@@ -43,7 +43,7 @@ function logit(){
 }
 
 versionCompare() {
-    if [[ $1 == $2 ]]
+    if [[ ${1:-} == ${2:-} ]]
     then
         return 0
     fi
@@ -253,9 +253,6 @@ function defineVariable(){
 }
 
 function defineVarOnGrep(){
-    # TODO: Improve code
-    # local stringToGrep="${1}"
-    # local grepVarName="${2}"
 
     grep --count "${stringToGrep}" "${tmpfile}" "${outputFile}" >> /dev/null \
     && echo -e ${INFO_FORMAT}"\n\t ${messageOnGrep} ${CLEAR_FORMAT}\n"\
@@ -263,9 +260,6 @@ function defineVarOnGrep(){
 }
 
 function setResultBadge(){
-    # TODO: Improve code
-    # local exitCode=${1}
-    # local grepVarName="${2}"
 
     if [ "${exitCode}" == "SKIP" ]; then
         RESULT="${CLEAR_FORMAT}[${INFO_FORMAT}SKIP${CLEAR_FORMAT}]"
@@ -298,19 +292,7 @@ function runCommands(){
 }
 
 function defineCommand(){
-    # TODO: Improve code
-# declare -A commandDef=(
-#     [verbose]=${1}
-#     [dieOnError]=${2}
-#     [command]="${3}"
-#     [description]="${4}"
-#     [successVarName]="${5}"
-#     [failVarName]="${6}"
-#     [grepVarName]="${7}"
-#     [stringToGrep]="${8}"
-#     [messageOnGrep]="${9}"
-#     [runIfVarExistAndIsTrue]="${10}"
-# )
+
     local verbose=${1}
     local dieOnError=${2}
     local command="${3}"
@@ -346,9 +328,6 @@ function defineCommand(){
     echo -e ${DESCRIPTION_FORMAT} "${description}" ${CLEAR_FORMAT}
     echo -e ${COMMAND_FORMAT} "${command} \n" ${CLEAR_FORMAT}
 
-    # TODO: Improve code
-    # preExecute "$command" $verbose "$grepVarName" "$successVarName"
-    # setResultBadge $exitCode "$grepVarName"
     preExecute
     setResultBadge
 
@@ -392,11 +371,6 @@ function parseYmlToCommand(){
 }
 
 function executeCommand(){
-    # TODO: Improve code
-    # local command="${1}"
-    # local verbose=${2}
-    # local grepVarName="${3}"
-    # local successVarName="${4}"
 
     exitCode=0
 
@@ -426,12 +400,6 @@ function executeCommand(){
 }
 
 function preExecute(){
-    # TODO: Improve code
-    # local commandDef="${1}"
-    # local command="${1}"
-    # local verbose=${2}
-    # local grepVarName="${3}"
-    # local successVarName="${4}"
 
     case "$command" in
 
@@ -523,166 +491,6 @@ while getopts ":dlcsuvvt" o; do
         v)
             VERBOSE=$((${VERBOSE:-0} + 1))
         ;;
-#         t)
-#             echo "Test run"
-
-#             initial
-
-#             guiScript=$(mktemp /tmp/$SCRIPT_NAME.XXXXXX)
-#             gitlabNames=$(mktemp /tmp/$SCRIPT_NAME.XXXXXX)
-#             gitlabGit=$(mktemp /tmp/$SCRIPT_NAME.XXXXXX)
-
-
-#             function parseYmlToCommandNew(){
-
-#                 commandDefinition="${1}"
-
-#                 local command="commands_${commandDefinition}_name"
-#                 local description="commands_${commandDefinition}_description"
-#                 local checked="commands_${commandDefinition}_checked"
-#                 local commands="commands_${commandDefinition}_commands"
-
-
-#                 defineCommandNew "${!name}" "${!description}" "${!checked}" "${!commands}"
-#             }
-
-
-#             function defineCommandNew(){
-
-
-#                 local name=${1}
-#                 local description=${2}
-#                 local isChecked="${3}"
-#                 local commands="${4}"
-
-#                 [[ $isChecked == true ]] \
-#                 && local checked="ON" \
-#                 || local checked="OFF"
-
-#                 echo -e "${name} ${description} ${checked}"
-#                 # echo -e "${name} ${description} ${checked} ${commands}"
-
-#                 # local tmpfile=$(mktemp /tmp/$SCRIPT_NAME.XXXXXX)
-#                 # local outputFile=$(mktemp /tmp/$SCRIPT_NAME.XXXXXX)
-
-
-#                 # if [ $verbose == true ] || [ "$verbose" == "v" ] || [ "$verbose" == "verbose" ]; then
-#                 #     local verbose=true
-#                 # else
-#                 #     local verbose=false
-#                 # fi
-
-#                 # echo -e ${DESCRIPTION_FORMAT} "$description" ${CLEAR_FORMAT}
-#                 # echo -e ${COMMAND_FORMAT} "$command \n" ${CLEAR_FORMAT}
-
-#                 # preExecute "$command" $verbose "$grepVarName"
-#                 # setResultBadge $exitCode "$grepVarName"
-
-#                 # echo -e ${CLEAR_FORMAT}"\n"
-
-#                 # rm "$tmpfile" "$outputFile"
-
-#                 # dialog --title "Uruchom skrypt"  \
-#                 #         --radiolist "Wybierz skrypt" 15 60 4 \
-#                 #         "${ch[0]}" "${ch[1]}" ON \
-#                 #         "${ch[2]}" "${ch[3]}" OFF \
-#                 #         "${ch[4]}" "${ch[5]}" OFF \
-#                 #         "${ch[6]}" "${ch[7]}" OFF
-
-
-#             }
-
-#             function formatData(){
-
-#                 echo -e "${YELLOW} Loadnig script ${NORMAL}"
-
-#                 local online="${1}"
-#                 i=1
-#                 echo "$online" | while read line;do
-
-#                     git="$(echo $line | jq -r ".git")"
-#                     echo -e "$i) git clone --progress --recursive --verbose $git ;;" >> "$gitlabGit"
-
-#                     name="$(echo $line | jq -r ".name")"
-#                     local projects_names=$(echo $i" "\""$name"\" "off" >> "$gitlabNames")
-
-#                 echo "$i $name "
-
-#                     i=$[i+1]
-
-#                 done
-#             }
-
-
-#             function createGui(){
-
-
-#                 local projects_names="$(cat $gitlabNames)"
-
-#             cat >> "$guiScript" <<- EndOfScript
-#             #!/bin/bash
-
-#             # Janusz Ładecki <szunaj13pl@gmail.com>
-#             # 21.09.2017
-
-#             echo $i
-
-#             function measureScreen(){
-#                 rows=$(tput lines)
-#                 cols=$(tput cols)
-#             }
-
-#             function createGui(){
-#                 local TYPE="radiolist"
-#                 local HEIGHT=\$((rows - 3))
-#                 local WIDTH=\$(( cols / 2))
-#                 local CHOICE_HEIGHT=\$(( rows - 5))
-#                 local MENU="by Janusz Ładecki\n\nChoose repo to clone:"
-
-#                 local OPTIONS=($(cat $gitlabNames))
-
-#                     local CHOICES=\$(dialog  --separate-output --\$TYPE   \
-#                             "\$MENU" \
-#                             \$HEIGHT \$WIDTH \$CHOICE_HEIGHT \
-#                             "\${OPTIONS[@]}" \
-#                             2>&1 >/dev/tty)
-
-#                 clear
-
-#                 for choice in \$CHOICES
-#                 do
-#                     case \$choice in
-
-# EndOfScript
-
-
-#                 # Insert git clone commands
-#                 cat "$gitlabGit" >> "$guiScript"
-#                 # Apend closing for 'for, case, function'
-#                 echo -e "\n\t esac \n done \n} \n measureScreen \n createGui" >> "$guiScript"
-
-#             }
-
-
-#             function run(){
-#                 chmod +x "$guiScript"
-#                 "$guiScript"
-#             }
-
-#             eval $(parseYaml "./default_config.yml")
-
-#             declare -a arrayOfCommands=($commands_order)
-
-#             for command in "${arrayOfCommands[@]}"
-#             do
-#                 parseYmlToCommandNew "$command"
-#             done
-
-#             exit 0
-
-#             test_run=true
-
-#         ;;
         *)
             usage
         ;;
