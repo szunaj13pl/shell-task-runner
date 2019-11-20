@@ -84,14 +84,14 @@ sudo_chown:
 
 composer_install:
   command: 'composer install --no-interaction'
-  verbose: true
+  verbose: false
   exit_on_error: true
   description: 'Install PHP dependensis'
   set_var_grep:
   set_var_success:
   set_var_fail:
-  grep: Run update
-  grep_message: 'Composer update is recomended'
+  grep:
+  grep_message:
   run_if_var_is_true:
 
 npm_install:

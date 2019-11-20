@@ -8,7 +8,7 @@ clear
 
 #   ================= Configuration ==================  #
 
-VERSION=19.11.20.0
+VERSION=19.11.20.1
 GITHUB_URL='https://github.com/szunaj13pl/shell-task-runner'
 
 CONFIG_FOLDER="$HOME/.config/task-runner"
