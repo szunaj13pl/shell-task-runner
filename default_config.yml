@@ -3,7 +3,7 @@
 #           run commands in order
 # COMMANDS: git chown sudo_chown
 #
-# sudo_chown: <- name od command (user_define)
+# sudo_chown: <- name of command (user_define)
 #   command: "tutorial"
 #   verbose: true|false
 #   exit_on_error: true|false
