@@ -48,7 +48,7 @@ AUTOUPDATE: true
 
 Creates a backup automatically adding to the end of file `~` applies to configuration and script itself
 
-## Instalation
+## Installation
 
 **via curl**
 ```
