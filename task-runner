@@ -8,7 +8,7 @@ clear
 
 #   ================= Configuration ==================  #
 
-VERSION=19.11.19.2
+VERSION=19.11.19.7
 GITHUB_URL='https://github.com/szunaj13pl/shell-task-runner'
 
 CONFIG_FOLDER="$HOME/.config/task-runner"
@@ -79,7 +79,8 @@ versionCompare() {
 
 function initial(){
 
-    SCRIPT_NAME=$(basename ${0})
+    SCRIPT_ALIAS=$(basename ${0})
+    SCRIPT_NAME='task-runner'
     SCRIPT_SERVER_VERSION=$(mktemp -d /tmp/${SCRIPT_NAME}.XXXXXX)
 
     # Use colors, but only if connected to a terminal, and that terminal supports them.
@@ -135,8 +136,9 @@ function getServerVersion(){
 }
 
 function refreshDefaultConfigFile(){
+
     cp "${SCRIPT_SERVER_VERSION}/${CONFIG_DEFAULT_NAME}" "${CONFIG_DEFAULT_FILE}" \
-    cp -b "${CONFIG_DEFAULT_FILE}" "${CONFIG_FILE}"
+    && cp -b "${CONFIG_DEFAULT_FILE}" "${CONFIG_FILE}"
 }
 
 function refreshDefaultConfig(){
@@ -150,8 +152,9 @@ function refreshDefaultConfig(){
 }
 
 function checkConfig(){
+    local force=${1:-false}
 
-    if [ ! -s "${CONFIG_FILE}" ]; then
+    if [ ! -s "${CONFIG_FILE}" ] || [ "${force}" == "true" ]; then
 
         mkdir -p "${CONFIG_FOLDER}" || echo "Can not create default config at ${CONFIG_FILE}" && echo "Default config was created"
 
@@ -209,21 +212,21 @@ function replaceLocalScript(){
     # Cleaning
     rm -rf "$SCRIPT_SERVER_VERSION" "${script_full_path}.bak"
 
-    # TODO: Przetestować na czystym Ubuntu
     echo -e "${GREEN}${BOLD}Skrypt zaktualizowany${NORMAL}" \
-    && exit 0
-    # $SCRIPT_NAME && exit 0
+    && kill -9 $$ && exit 0
 }
 
 function loadConfig(){
     eval $(parseYaml "${CONFIG_FILE}")
-    declare -ax arrayOfCommands=($COMMANDS)
+    declare -ax arrayOfCommands=($COMMANDS:-)
     ARRAY_OF_COMMANDS=(${arrayOfCommands[@]})
 }
 
 function parseYaml() {
 
-    local prefix=${2:-''}
+# Problem jest taki że ostatni element ma ':-'
+# powodem jest `set -u # or set -o nounset`
+    local prefix=${2:-}
     local s='[[:space:]]*' w='[a-zA-Z0-9_]*' fs=$(echo @|tr @ '\034')
 
     sed -ne "s|^\($s\):|\1|" \
@@ -285,7 +288,8 @@ function setResultBadge(){
 }
 
 function runCommands(){
-    for command in "${ARRAY_OF_COMMANDS[@]}"
+    # naprawia bug `parseYaml()` `/:-`
+    for command in "${ARRAY_OF_COMMANDS[@]/:-}"
     do
         parseYmlToCommand "${command}"
     done
@@ -293,8 +297,8 @@ function runCommands(){
 
 function defineCommand(){
 
-    local verbose=${1}
-    local dieOnError=${2}
+    local verbose="${1}"
+    local dieOnError="${2}"
     local command="${3}"
     local description="${4}"
     local successVarName="${5}"
@@ -305,8 +309,8 @@ function defineCommand(){
     local runIfVarExistAndIsTrue="${10}"
 
     # Eval and Check if variable is define to 'true'
-    if [ "${!runIfVarExistAndIsTrue:-}" != "true" ] \
-    && [ "${runIfVarExistAndIsTrue:-}" != "" ]
+    if [ "${runIfVarExistAndIsTrue:-}" != "" ] \
+    && [ "${!runIfVarExistAndIsTrue:-}" != "true" ]
     then
         return ${ERR_RUN_CONDITION_NOT_FULFILLED:-1}
     fi
@@ -358,7 +362,7 @@ function parseYmlToCommand(){
     local run_if_var_is_true="${commandDefinition}_run_if_var_is_true"
 
     defineCommand \
-    "${VERBOSE:-${!verbose:-0}}"\
+    "${VERBOSE:-${!verbose:-false}}"\
     "${!exit_on_error:-false}"\
     "${!command:?\"${RED}Command in config is empty.${NORMAL} Run ${BLUE}${BOLD}${SCRIPT_NAME} -c${NORMAL}\"}"\
     "${!description:?\"${RED}Description in config is empty.${NORMAL} Run ${BLUE}${BOLD}${SCRIPT_NAME} -c${NORMAL}\"}"\
@@ -444,7 +448,7 @@ usage() {
 
 #   ================= MAIN ==================  #
 
-while getopts ":dlcsuvvt" o; do
+while getopts ":dlcfsuvvt" o; do
     case "${o}" in
         d)
             echo "Debug mode is ON"
@@ -471,6 +475,11 @@ while getopts ":dlcsuvvt" o; do
                 editor "${CONFIG_FILE}"
             fi
 
+            exit 0
+        ;;
+        f)
+            initial
+            checkConfig "true"
             exit 0
         ;;
         s)

@@ -84,7 +84,7 @@ sudo_chown:
 
 composer_install:
   command: 'composer install --no-interaction'
-  verbose: false
+  verbose: true
   exit_on_error: true
   description: 'Install PHP dependensis'
   set_var_grep:
