@@ -154,15 +154,17 @@ function refreshDefaultConfig(){
 function checkConfig(){
     local force=${1:-false}
 
-    if [ ! -s "${CONFIG_FILE}" ] || [ "${force}" == "true" ]; then
+    if [ ${IS_CONFIG_FILE_LOCAL:-false} != "true" ]; then
 
-        mkdir -p "${CONFIG_FOLDER}" || echo "Can not create default config at ${CONFIG_FILE}" && echo "Default config was created"
+        if [ ! -s "${CONFIG_FILE}" ] || [ "${force}" == "true" ]; then
 
-        getServerVersion && refreshDefaultConfigFile \
-        && refreshDefaultConfig
+            mkdir -p "${CONFIG_FOLDER}" || echo "Can not create default config at ${CONFIG_FILE}" && echo "Default config was created"
+
+            getServerVersion && refreshDefaultConfigFile \
+            && refreshDefaultConfig
+        fi
+
     fi
-
-    loadConfig
 }
 
 function checkLastUpdateDate(){
@@ -241,6 +243,23 @@ function parseYaml() {
          printf("%s%s%s=\"%s\"\n", "'$prefix'",vn, $2, $3);
       }
 }'
+}
+
+function setAlias(){
+
+    local aliasCommand='alias rrr="rr -l"'
+    local files=("$HOME/.bashrc" "$HOME/.zshrc")
+
+    local file
+    for file in  "${files[@]}"
+    do
+        if ! grep -Fxq "${aliasCommand}" "${file}"
+        then
+            echo -e "${NORMAL}${YELLOW}Adding ${BOLD}${aliasCommand} ${NORMAL}to ${BLUE}${BOLD}${file}${NORMAL}"
+            echo "${aliasCommand}" >> "${file}"
+            echo -e "${BLUE}Run ${YELLOW}${BOLD}source ${file}${NORMAL}${BLUE} or reload terminal to use ${YELLOW}${aliasCommand} ${NORMAL}"
+        fi
+    done
 }
 
 # ==============  TaskRunner  ===============
@@ -435,6 +454,7 @@ usage() {
         -s    'show configuration'                          \n\
         -d    'enable debuging mode'                        \n\
         -v    'all commands verbose'                        \n\
+        -l    'use local config(rr.yml) alias rrr'          \n\
         -u    'self update'                                 \n\n\n\
     Configuration:                                          \n\n\
         Version:                    ${VERSION}              \n\
@@ -448,6 +468,9 @@ usage() {
 
 #   ================= MAIN ==================  #
 
+# Defines variables and create temp files
+initial
+
 while getopts ":dlcfsuvvt" o; do
     case "${o}" in
         d)
@@ -457,16 +480,13 @@ while getopts ":dlcfsuvvt" o; do
             set -o functrace
         ;;
         l)
-            initial
+            IS_CONFIG_FILE_LOCAL=true
             CONFIG_FILE="./${CONFIG_REPO_NAME}"
-            if [ -s "${CONFIG_FILE}" ]; then
-                less "${CONFIG_FILE}"
+            if [ ! -s "${CONFIG_FILE}" ]; then
+                echo -e "${NORMAL}${RED}No config ${BOLD}rr.yml ${NORMAL}${RED}file ${NORMAL}"
             fi
-
-            exit 0
         ;;
         c)
-            initial
 
             if [ -e "${CONFIG_FILE}" ]; then
                 editor "${CONFIG_FILE}"
@@ -478,7 +498,6 @@ while getopts ":dlcfsuvvt" o; do
             exit 0
         ;;
         f)
-            initial
             checkConfig "true"
             exit 0
         ;;
@@ -507,20 +526,27 @@ while getopts ":dlcfsuvvt" o; do
 done
 shift $((OPTIND-1))
 
-
-# Defines variables and create temp files
-initial
-
 # Install requierd programs
 isInstalled git wget less
+
+# Checking and setting alias rrr="rr -l"
+setAlias
 
 # Get config
 checkConfig
 
-# Check for new update
-checkLastUpdateDate
+loadConfig
 
-[ "${JUST_UPDATE:=false}" == true ] && exit 0
+if [ ${IS_CONFIG_FILE_LOCAL:-false} != "true" ]; then
+    # Check for new update
+    checkLastUpdateDate
+
+    [ "${JUST_UPDATE:=false}" == true ] && exit 0
+fi
 
 # Run tasks
 runCommands
+
+
+# TODO:
+#  GUI
